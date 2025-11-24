@@ -3,7 +3,9 @@ package view;
 import interface_adapter.filter_search.FilterSearchController;
 import interface_adapter.filter_search.FilterSearchState;
 import interface_adapter.filter_search.FilterSearchViewModel;
+import interface_adapter.logged_in.ChangePasswordController;
 import interface_adapter.logout.LogoutController;
+import interface_adapter.signup.SignupState;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -21,12 +23,12 @@ import java.beans.PropertyChangeListener;
 public class FilterSearchView extends JPanel implements ActionListener, PropertyChangeListener {
     private final String viewName = "Filter Search";
     private final FilterSearchViewModel filterSearchViewModel;
-    private final FilterSearchController filterSearchController = null;
+    private FilterSearchController filterSearchController = null;
 
-    private final JLabel exchange;
-    private final JLabel mic;
-    private final JLabel securityType;
-    private final JLabel currency;
+    private final JLabel exchange = new JLabel("Exchange");
+    private final JLabel mic = new JLabel("MIC:");
+    private final JLabel securityType = new JLabel("Security Type:");
+    private final JLabel currency = new JLabel("Currency:");
     private final Button search;
 
     private final String[] exchangeOptions = {"AD" ,
@@ -154,12 +156,55 @@ public class FilterSearchView extends JPanel implements ActionListener, Property
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         final JComboBox<String> exchangeDrop = new JComboBox<String>(exchangeOptions);
-        this.add(exchangeDrop);
+        final JComboBox<String> micDrop = new JComboBox<String>(micOptions);
+        final JComboBox<String> securityDrop = new JComboBox<String>(securityOptions);
+        final JComboBox<String> currencyDrop = new JComboBox<String>(currencyOptions);
+        this.search = new Button("Search");
+
+        JPanel panel_e = new JPanel();
+        panel_e.add(exchange);
+        panel_e.add(exchangeDrop);
+
+        JPanel panel_m = new JPanel();
+        panel_m.add(mic);
+        panel_m.add(micDrop);
+
+        JPanel panel_s = new JPanel();
+        panel_s.add(securityType);
+        panel_s.add(securityDrop);
+
+        JPanel panel_c = new JPanel();
+        panel_c.add(currency);
+        panel_c.add(currencyDrop);
+
+        this.add(panel_e, BorderLayout.PAGE_START);
+        this.add(panel_m, BorderLayout.PAGE_START);
+        this.add(panel_s, BorderLayout.PAGE_START);
+        this.add(panel_c, BorderLayout.PAGE_START);
+        this.add(search, BorderLayout.PAGE_START);
+
+
+
+
+    }
+    @Override
+    public void actionPerformed(ActionEvent evt) {
+        /* TODO add search results */
+
     }
 
+    public String getViewName() {
+        return viewName;
+    }
 
+    public void setFilterSearchController(FilterSearchController filterSearchController) {
+        this.filterSearchController = filterSearchController;
+    }
 
-
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        final FilterSearchState state = (FilterSearchState) evt.getNewValue();
+    }
 
 
 }

@@ -13,6 +13,7 @@ public class FilterSearchPresenter implements FilterSearchOutputBoundary{
     private final ViewManagerModel viewManagerModel;
 
     public FilterSearchPresenter(FilterSearchViewModel filterSearchViewModel, ViewManagerModel viewManagerModel) {
+
         this.viewManagerModel = viewManagerModel;
         this.filterSearchViewModel = filterSearchViewModel;
     }

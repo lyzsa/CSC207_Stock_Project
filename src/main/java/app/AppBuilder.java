@@ -3,6 +3,9 @@ package app;
 import data_access.FileUserDataAccessObject;
 import entity.UserFactory;
 import interface_adapter.ViewManagerModel;
+import interface_adapter.filter_search.FilterSearchController;
+import interface_adapter.filter_search.FilterSearchPresenter;
+import interface_adapter.filter_search.FilterSearchViewModel;
 import interface_adapter.logged_in.ChangePasswordController;
 import interface_adapter.logged_in.ChangePasswordPresenter;
 import interface_adapter.logged_in.LoggedInViewModel;
@@ -17,6 +20,9 @@ import interface_adapter.signup.SignupViewModel;
 import use_case.change_password.ChangePasswordInputBoundary;
 import use_case.change_password.ChangePasswordInteractor;
 import use_case.change_password.ChangePasswordOutputBoundary;
+import use_case.filter_search.FilterSearchInputBoundary;
+import use_case.filter_search.FilterSearchInteractor;
+import use_case.filter_search.FilterSearchOutputBoundary;
 import use_case.login.LoginInputBoundary;
 import use_case.login.LoginInteractor;
 import use_case.login.LoginOutputBoundary;
@@ -26,10 +32,7 @@ import use_case.logout.LogoutOutputBoundary;
 import use_case.signup.SignupInputBoundary;
 import use_case.signup.SignupInteractor;
 import use_case.signup.SignupOutputBoundary;
-import view.LoggedInView;
-import view.LoginView;
-import view.SignupView;
-import view.ViewManager;
+import view.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -56,6 +59,8 @@ public class AppBuilder {
     private LoggedInViewModel loggedInViewModel;
     private LoggedInView loggedInView;
     private LoginView loginView;
+    private FilterSearchViewModel filterSearchViewModel;
+    private FilterSearchView filterSearchView;
 
     public AppBuilder() {
         cardPanel.setLayout(cardLayout);
@@ -79,6 +84,13 @@ public class AppBuilder {
         loggedInViewModel = new LoggedInViewModel();
         loggedInView = new LoggedInView(loggedInViewModel);
         cardPanel.add(loggedInView, loggedInView.getViewName());
+        return this;
+    }
+
+    public AppBuilder addFilterSearchView() {
+        filterSearchViewModel = new FilterSearchViewModel();
+        filterSearchView = new FilterSearchView(filterSearchViewModel);
+        cardPanel.add(filterSearchView, filterSearchViewModel.getViewName());
         return this;
     }
 
@@ -113,6 +125,17 @@ public class AppBuilder {
 
         ChangePasswordController changePasswordController = new ChangePasswordController(changePasswordInteractor);
         loggedInView.setChangePasswordController(changePasswordController);
+        return this;
+    }
+
+    public AppBuilder addFilterSearchUseCase() {
+        final FilterSearchOutputBoundary filterSearchOutputBoundary = new FilterSearchPresenter(filterSearchViewModel,
+                viewManagerModel);
+        final FilterSearchInputBoundary filterSearchInteractor = new FilterSearchInteractor(
+                filterSearchOutputBoundary);
+
+        FilterSearchController filterSearchController = new FilterSearchController(filterSearchInteractor);
+        filterSearchView.setFilterSearchController(filterSearchController);
         return this;
     }
 
