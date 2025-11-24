@@ -161,7 +161,7 @@ public class AppBuilder {
 
         application.add(cardPanel);
 
-        viewManagerModel.setState(signupView.getViewName());
+        viewManagerModel.setState(filterSearchView.getViewName());
         viewManagerModel.firePropertyChange();
 
         return application;

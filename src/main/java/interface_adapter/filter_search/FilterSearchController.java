@@ -17,7 +17,7 @@ public class FilterSearchController {
      * @param securityType the security type
      * @param currency the currency
      */
-    public void execute(String exchange, String mic, String securityType, String currency) {
+    public void loadFilterSearch(String exchange, String mic, String securityType, String currency) {
         final FilterSearchInputData filterSearchInputData = new FilterSearchInputData(exchange, mic, securityType, currency);
 
         filterSearchInputBoundary.execute(filterSearchInputData);

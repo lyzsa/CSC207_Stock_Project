@@ -29,7 +29,8 @@ public class FilterSearchView extends JPanel implements ActionListener, Property
     private final JLabel mic = new JLabel("MIC:");
     private final JLabel securityType = new JLabel("Security Type:");
     private final JLabel currency = new JLabel("Currency:");
-    private final Button search;
+    private final JButton search;
+    private final JButton backToHomeButton;
 
     private final String[] exchangeOptions = {"AD" ,
             "AS" , "AT" , "AX" , "BA" , "BC" , "BD" , "BE" , "BH" , "BK" , "BO" , "BR" ,
@@ -159,7 +160,12 @@ public class FilterSearchView extends JPanel implements ActionListener, Property
         final JComboBox<String> micDrop = new JComboBox<String>(micOptions);
         final JComboBox<String> securityDrop = new JComboBox<String>(securityOptions);
         final JComboBox<String> currencyDrop = new JComboBox<String>(currencyOptions);
-        this.search = new Button("Search");
+        this.search = new JButton("Search");
+
+        this.setLayout(new BorderLayout());
+
+        JPanel topPanel = new JPanel();
+        this.add(topPanel, BorderLayout.NORTH);
 
         JPanel panel_e = new JPanel();
         panel_e.add(exchange);
@@ -177,11 +183,39 @@ public class FilterSearchView extends JPanel implements ActionListener, Property
         panel_c.add(currency);
         panel_c.add(currencyDrop);
 
-        this.add(panel_e, BorderLayout.PAGE_START);
-        this.add(panel_m, BorderLayout.PAGE_START);
-        this.add(panel_s, BorderLayout.PAGE_START);
-        this.add(panel_c, BorderLayout.PAGE_START);
-        this.add(search, BorderLayout.PAGE_START);
+        JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        backToHomeButton = new JButton("Back");
+        leftPanel.add(backToHomeButton);
+        topPanel.add(leftPanel, BorderLayout.WEST);
+
+        topPanel.add(panel_e, BorderLayout.PAGE_START);
+        topPanel.add(panel_m, BorderLayout.PAGE_START);
+        topPanel.add(panel_s, BorderLayout.PAGE_START);
+        topPanel.add(panel_c, BorderLayout.PAGE_START);
+        topPanel.add(search, BorderLayout.PAGE_START);
+
+        JPanel mainPanel = new JPanel();
+
+
+
+
+        backToHomeButton.addActionListener(e -> {
+            // TODO: implement navigation back to the main/home view.
+            // For now, you can leave this empty or show a message:
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Back to Home is not implemented yet.",
+                    "Info",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+        });
+
+        search.addActionListener(e -> {
+            filterSearchController.execute(exchangeDrop.getSelectedItem().toString(),
+                    micDrop.getSelectedItem().toString(), securityDrop.getSelectedItem().toString(),
+                    currencyDrop.getSelectedItem().toString());
+
+        });
 
 
 
@@ -205,6 +239,7 @@ public class FilterSearchView extends JPanel implements ActionListener, Property
     public void propertyChange(PropertyChangeEvent evt) {
         final FilterSearchState state = (FilterSearchState) evt.getNewValue();
     }
+
 
 
 }
