@@ -19,7 +19,11 @@ public class FilterSearchPresenter implements FilterSearchOutputBoundary{
 
     @Override
     public void prepareSuccessView(FilterSearchOutputData filterSearchOutputData) {
-        filterSearchViewModel.getState();
+        this.filterSearchViewModel.firePropertyChange();
+        filterSearchViewModel.setState(new FilterSearchState());
+
+        this.viewManagerModel.setState(filterSearchViewModel.getViewName());
+        this.viewManagerModel.firePropertyChange();
 
     }
 }
