@@ -64,7 +64,7 @@ public class Dashboard extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.CENTER;
 
-        String[] buttonNames = {"Home (Real-Time Trade)", "Portfolio", "Watchlist", "Settings"};
+        String[] buttonNames = {"Home (Real-Time Trade)", "Portfolio", "Watchlist", "Company Earnings History", "Settings"};
 
         // Create and add the four main navigation buttons
         for (int i = 0; i < buttonNames.length; i++) {
@@ -120,6 +120,7 @@ public class Dashboard extends JFrame {
         mainContentPanel.add(createPlaceholderPanel("Portfolio View", Color.LIGHT_GRAY), "Portfolio");
         mainContentPanel.add(createPlaceholderPanel("Watchlist Management", Color.CYAN), "Watchlist");
         mainContentPanel.add(createPlaceholderPanel("User Settings", Color.YELLOW), "Settings");
+        mainContentPanel.add(createPlaceholderPanel("Company Earning History", Color.YELLOW), "Earnings");
 
         // Show the Home view by default
         cardLayout.show(mainContentPanel, "Home");
