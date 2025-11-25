@@ -15,6 +15,7 @@ public class Dashboard extends JFrame {
     private static final Logger LOGGER = Logger.getLogger(Dashboard.class.getName());
 
     private final StockPage homePanel;
+    private final EarningsPage earningsPanel;
     private final CardLayout cardLayout = new CardLayout();
     private final JPanel mainContentPanel;
     private final String username;
@@ -28,6 +29,7 @@ public class Dashboard extends JFrame {
 
         this.homePanel = new StockPage(); // The real-time trade view
         this.mainContentPanel = new JPanel(cardLayout);
+        this.earningsPanel = new EarningsPage();
 
         setLayout(new BorderLayout());
 
@@ -70,7 +72,13 @@ public class Dashboard extends JFrame {
         for (int i = 0; i < buttonNames.length; i++) {
             JButton button = new JButton(buttonNames[i]);
             button.setFont(new Font("Arial", Font.BOLD, 14));
-            String cardName = buttonNames[i].split(" ")[0]; // Use first word as card key
+            // String cardName = buttonNames[i].split(" ")[0]; // Use first word as card key
+            String cardName;
+            if (buttonNames[i].equals("Company Earnings History")) {
+                cardName = "Earnings";   // must match your CardLayout key
+            } else {
+                cardName = buttonNames[i].split(" ")[0];
+            }
 
             button.addActionListener(e -> {
                 cardLayout.show(mainContentPanel, cardName);
@@ -119,8 +127,8 @@ public class Dashboard extends JFrame {
         // Add placeholder panels for other views
         mainContentPanel.add(createPlaceholderPanel("Portfolio View", Color.LIGHT_GRAY), "Portfolio");
         mainContentPanel.add(createPlaceholderPanel("Watchlist Management", Color.CYAN), "Watchlist");
+        mainContentPanel.add(earningsPanel, "Earnings");
         mainContentPanel.add(createPlaceholderPanel("User Settings", Color.YELLOW), "Settings");
-        mainContentPanel.add(createPlaceholderPanel("Company Earning History", Color.YELLOW), "Earnings");
 
         // Show the Home view by default
         cardLayout.show(mainContentPanel, "Home");
