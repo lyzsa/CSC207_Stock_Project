@@ -40,7 +40,7 @@ public class FilterSearchView extends JPanel implements ActionListener, Property
             "OL" , "OM" , "PA" , "PM" , "PR" , "QA" , "RO" , "RG" , "SA" , "SG" , "SI" ,
             "SN" , "SR" , "SS" , "ST" , "SW" , "SZ" , "T" , "TA" , "TL" , "TO" , "TW" ,
             "TWO" , "US" , "V" , "VI" , "VN" , "VS" , "WA" , "HA" , "SX" , "TG" , "SC"};
-    private final String[] micOptions = {"XADS", "XAMS", "ASEX", "XASX", "XBUE", "XBOG", "XBUD", "XBER", "XBAH", "XBKK",
+    private final String[] micOptions = {null, "XADS", "XAMS", "ASEX", "XASX", "XBUE", "XBOG", "XBUD", "XBER", "XBAH", "XBKK",
             "XBOM", "XBRU", "XCAI", "XCNQ", "XCSE", "BVCA", "XCAS", "XDFM", "XETR", "XDUS", "XFRA", "XHEL", "XHKG",
             "XHAM", "XICE", "XDUB", "XIST", "XIDX", "XJSE", "XKLS", "XKOS", "XKRX", "XKUW", "XLON", "XLIS", "XMAD",
             "MISX", "XMIL", "XMAL", "XMUN", "XMEX", "NEOE", "XNSA", "XNSE", "XNZE", "XOSL", "XMUS", "XPAR", "XPHS",
@@ -48,7 +48,7 @@ public class FilterSearchView extends JPanel implements ActionListener, Property
             "WJPX", "XTAE", "XTAL", "XTSE", "XTAI", "FNSE", "ROCO", "XTSX", "XWBO", "HSTC", "XLIT", "XWAR", "XHAN",
             "XNYS", "XGAT", "XASE", "BATS", "ARCX", "XNMS", "XNCM", "XNGS", "IEXG", "XNAS", "OTCM", "OOTC", "XSTC",
             "XHNX", "FNIS", "FNDK", "NFI"};
-    private final String[] securityOptions = {"ABS Auto", "ABS Card", "ABS Home", "ABS Other", "ACCEPT BANCARIA",
+    private final String[] securityOptions = {null, "ABS Auto", "ABS Card", "ABS Home", "ABS Other", "ACCEPT BANCARIA",
             "ADJ CONV. TO FIXED", "ADJ CONV. TO FIXED, OID", "ADJUSTABLE", "ADJUSTABLE, OID", "ADR", "Agncy ABS Home",
             "Agncy ABS Other", "Agncy CMBS", "Agncy CMO FLT", "Agncy CMO INV", "Agncy CMO IO", "Agncy CMO Other",
             "Agncy CMO PO", "Agncy CMO Z", "Asset-Based", "ASSET-BASED BRIDGE", "ASSET-BASED BRIDGE REV",
@@ -123,7 +123,7 @@ public class FilterSearchView extends JPanel implements ActionListener, Property
             "UNITRANCHE REV" , "UNITRANCHE TERM" , "US DOMESTIC" , "US GOVERNMENT" , "US NON-DOLLAR" ,
             "VAR RATE DEM OBL" , "VAT-TRNCH" , "VENEZUELAN CP" , "VIETNAMESE CD" , "VOLATILITY DERIVATIVE" , "Warrant",
             "YANKEE" , "YANKEE CD" , "YEN CD" , "YEN CP" , "Yield Curve" , "ZERO COUPON" , "ZERO COUPON, OID"};
-    private final String[] currencyOptions = {"ADP", "AED", "AFN", "ALL", "AMD", "ANG", "AOA", "ARS", "ATS", "AUD",
+    private final String[] currencyOptions = {null, "ADP", "AED", "AFN", "ALL", "AMD", "ANG", "AOA", "ARS", "ATS", "AUD",
             "AUd", "AWG", "AZM", "AZN", "BAM", "BBD", "BDT", "BEF", "BGN", "BHD", "BIF", "BMD", "BND", "BOB", "BRL",
             "BRl", "BSD", "BTN", "BWP", "BWp", "BYN", "BYR", "BYS", "BZD", "CAD", "CAd", "CDF", "CER", "CHF", "CHf",
             "CLF", "CLP", "CNH", "CNT", "CNY", "COP", "COU", "CRC", "CRS", "CUP", "CVE", "CYP", "CZK", "DEM", "DJF",
@@ -211,9 +211,23 @@ public class FilterSearchView extends JPanel implements ActionListener, Property
         });
 
         search.addActionListener(e -> {
-            filterSearchController.execute(exchangeDrop.getSelectedItem().toString(),
-                    micDrop.getSelectedItem().toString(), securityDrop.getSelectedItem().toString(),
-                    currencyDrop.getSelectedItem().toString());
+            String ex = exchangeDrop.getSelectedItem().toString();
+            String mi = null;
+            String sec = null;
+            String curr = null;
+            if (micDrop.getSelectedItem() != null) {
+                mi = micDrop.getSelectedItem().toString();
+            }
+
+            if (securityDrop.getSelectedItem() != null) {
+                sec = securityDrop.getSelectedItem().toString();
+            }
+
+            if (currencyDrop.getSelectedItem() != null) {
+                curr =  currencyDrop.getSelectedItem().toString();
+            }
+
+            filterSearchController.loadFilterSearch(ex , mi, sec, curr);
 
         });
 

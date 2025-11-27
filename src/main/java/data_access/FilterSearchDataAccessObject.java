@@ -136,5 +136,7 @@ public class FilterSearchDataAccessObject implements FilterSearchDataAccessInter
             );
             result.add(stock);
         }
+        return result;
+    }
 }
 

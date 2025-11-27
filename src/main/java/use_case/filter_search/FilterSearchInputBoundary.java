@@ -1,7 +1,5 @@
 package use_case.filter_search;
 
-import use_case.login.LoginInputData;
-
 /**
  * Input Boundary for the Filter Search Use Case.
  */
@@ -9,7 +7,7 @@ import use_case.login.LoginInputData;
 public interface FilterSearchInputBoundary {
     /**
      * Executes the filter search use case.
-     * @param filterSearchInputData the input data
+     * @param request the input data
      */
-    void execute(FilterSearchInputData filterSearchInputData);
+    void execute(FilterSearchRequest request);
 }

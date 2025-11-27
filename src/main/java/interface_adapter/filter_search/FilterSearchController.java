@@ -2,12 +2,13 @@ package interface_adapter.filter_search;
 
 import use_case.filter_search.FilterSearchInputBoundary;
 import use_case.filter_search.FilterSearchInputData;
+import use_case.filter_search.FilterSearchRequest;
 
 public class FilterSearchController {
-    private final FilterSearchInputBoundary filterSearchInputBoundary;
+    private final FilterSearchInputBoundary interactor;
 
     public FilterSearchController(FilterSearchInputBoundary filterSearchInputBoundary) {
-        this.filterSearchInputBoundary = filterSearchInputBoundary;
+        this.interactor = filterSearchInputBoundary;
     }
 
     /**
@@ -18,8 +19,8 @@ public class FilterSearchController {
      * @param currency the currency
      */
     public void loadFilterSearch(String exchange, String mic, String securityType, String currency) {
-        final FilterSearchInputData filterSearchInputData = new FilterSearchInputData(exchange, mic, securityType, currency);
+        final FilterSearchRequest request = new FilterSearchRequest(exchange, mic, securityType, currency);
 
-        filterSearchInputBoundary.execute(filterSearchInputData);
+        interactor.execute(request);
     }
 }
