@@ -1,4 +1,4 @@
-package use_case.News;
+package use_case.news;
 
 import entity.NewsArticle;
 import java.util.List;

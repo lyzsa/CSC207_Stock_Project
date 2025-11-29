@@ -1,8 +1,7 @@
-package interface_adapter.NewsPage;
+package interface_adapter.news;
 
-import use_case.News.NewsInputBoundary;
-import use_case.News.NewsOutputBoundary;
-import use_case.News.NewsResponseModel;
+import use_case.news.NewsOutputBoundary;
+import use_case.news.NewsResponseModel;
 
 /**
  * receives output data from interactor

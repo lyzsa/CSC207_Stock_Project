@@ -1,7 +1,7 @@
 package view;
 
-import interface_adapter.NewsPage.NewsController;
-import interface_adapter.NewsPage.NewsViewModel;
+import interface_adapter.news.NewsController;
+import interface_adapter.news.NewsViewModel;
 import entity.NewsArticle;
 
 import javax.swing.*;

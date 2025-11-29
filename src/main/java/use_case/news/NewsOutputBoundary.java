@@ -1,4 +1,4 @@
-package use_case.News;
+package use_case.news;
 
 /**
  * Interface implemented by the presenter

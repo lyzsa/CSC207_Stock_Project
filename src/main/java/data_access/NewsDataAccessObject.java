@@ -1,7 +1,7 @@
 package data_access;
 
 import entity.NewsArticle;
-import use_case.News.NewsDataAccessInterface;
+import use_case.news.NewsDataAccessInterface;
 
 import org.json.JSONObject;
 import org.json.JSONArray;

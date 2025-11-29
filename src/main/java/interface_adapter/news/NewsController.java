@@ -1,7 +1,7 @@
-package interface_adapter.NewsPage;
+package interface_adapter.news;
 
-import use_case.News.NewsInputBoundary;
-import use_case.News.NewsRequestModel;
+import use_case.news.NewsInputBoundary;
+import use_case.news.NewsRequestModel;
 
 /**
  * read from UI

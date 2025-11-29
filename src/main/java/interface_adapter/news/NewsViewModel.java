@@ -1,4 +1,4 @@
-package interface_adapter.NewsPage;
+package interface_adapter.news;
 
 import entity.NewsArticle;
 

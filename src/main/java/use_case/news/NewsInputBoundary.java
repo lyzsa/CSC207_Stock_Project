@@ -1,4 +1,4 @@
-package use_case.News;
+package use_case.news;
 
 /**
  * Define what actions this user case supports
