@@ -3,7 +3,7 @@ package data_access;
 import entity.MarketStatus;
 import org.json.JSONObject;
 import org.json.JSONTokener;
-import use_case.MarketStatus.MarketStatusDataAccessInterface;
+import use_case.market_status.MarketStatusDataAccessInterface;
 
 import java.io.BufferedReader;
 import java.io.IOException;

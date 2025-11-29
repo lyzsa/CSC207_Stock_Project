@@ -1,4 +1,4 @@
-package interface_adapter.MarketStatus;
+package interface_adapter.market_status;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;

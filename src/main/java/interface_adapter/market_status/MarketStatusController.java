@@ -1,6 +1,6 @@
-package interface_adapter.MarketStatus;
+package interface_adapter.market_status;
 
-import use_case.MarketStatus.MarketStatusInputBoundary;
+import use_case.market_status.MarketStatusInputBoundary;
 
 public class MarketStatusController {
 
