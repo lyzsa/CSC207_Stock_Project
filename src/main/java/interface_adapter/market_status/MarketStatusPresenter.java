@@ -1,7 +1,7 @@
-package interface_adapter.MarketStatus;
+package interface_adapter.market_status;
 
-import use_case.MarketStatus.MarketStatusOutputBoundary;
-import use_case.MarketStatus.MarketStatusResponseModel;
+import use_case.market_status.MarketStatusOutputBoundary;
+import use_case.market_status.MarketStatusResponseModel;
 import entity.MarketStatus;
 
 public class MarketStatusPresenter implements  MarketStatusOutputBoundary {

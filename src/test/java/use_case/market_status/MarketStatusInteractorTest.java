@@ -1,4 +1,4 @@
-package use_case.MarketStatus;
+package use_case.market_status;
 
 import entity.MarketStatus;
 import org.junit.jupiter.api.Test;
