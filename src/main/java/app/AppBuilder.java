@@ -1,6 +1,7 @@
 package app;
 
 import data_access.FileUserDataAccessObject;
+import data_access.FilterSearchDataAccessObject;
 import entity.UserFactory;
 import interface_adapter.ViewManagerModel;
 import interface_adapter.filter_search.FilterSearchController;
@@ -20,6 +21,7 @@ import interface_adapter.signup.SignupViewModel;
 import use_case.change_password.ChangePasswordInputBoundary;
 import use_case.change_password.ChangePasswordInteractor;
 import use_case.change_password.ChangePasswordOutputBoundary;
+import use_case.filter_search.FilterSearchDataAccessInterface;
 import use_case.filter_search.FilterSearchInputBoundary;
 import use_case.filter_search.FilterSearchInteractor;
 import use_case.filter_search.FilterSearchOutputBoundary;
@@ -131,8 +133,10 @@ public class AppBuilder {
     public AppBuilder addFilterSearchUseCase() {
         final FilterSearchOutputBoundary filterSearchOutputBoundary = new FilterSearchPresenter(filterSearchViewModel,
                 viewManagerModel);
-        final FilterSearchInputBoundary filterSearchInteractor = new FilterSearchInteractor(
-                filterSearchOutputBoundary);
+        String key = "REPLACE";
+        FilterSearchDataAccessInterface filterObject = new FilterSearchDataAccessObject(key);
+        final FilterSearchInputBoundary filterSearchInteractor =
+                new FilterSearchInteractor( filterObject, filterSearchOutputBoundary);
 
         FilterSearchController filterSearchController = new FilterSearchController(filterSearchInteractor);
         filterSearchView.setFilterSearchController(filterSearchController);

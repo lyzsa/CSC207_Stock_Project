@@ -11,7 +11,7 @@ public class FilterSearchResponse {
         this.result = result;
     }
 
-    public List<Stock> getResults() {
+    public List<Stock> getStocks() {
         return this.result;
     }
 }

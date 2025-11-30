@@ -1,26 +1,39 @@
 package use_case.filter_search;
 
-import use_case.login.LoginInputBoundary;
+import entity.Stock;
+
+import java.util.List;
 
 /**
  * The Filter Search Interactor.
  */
 
 public class FilterSearchInteractor implements FilterSearchInputBoundary {
+    private final FilterSearchDataAccessInterface filterSearchDataAccess;
     private final FilterSearchOutputBoundary filterSearchPresenter;
 
-    public FilterSearchInteractor(FilterSearchOutputBoundary filterSearchOutputBoundary) {
+    public FilterSearchInteractor(FilterSearchDataAccessInterface data, FilterSearchOutputBoundary filterSearchOutputBoundary) {
+        this.filterSearchDataAccess = data;
         this.filterSearchPresenter = filterSearchOutputBoundary;
     }
 
     @Override
-    public void execute(FilterSearchInputData filterSearchInputData) {
-        final String exchange =  filterSearchInputData.getExchange();
-        final String mic =  filterSearchInputData.getMic();
-        final String securityType = filterSearchInputData.getSecurityType();
-        final String currency =  filterSearchInputData.getCurrency();
+    public void execute(FilterSearchRequest filterSearchRequest) {
 
-        final FilterSearchOutputData filterSearchOutputData = new FilterSearchOutputData();
-        filterSearchPresenter.prepareSuccessView(filterSearchOutputData);
+        try {
+            final String exchange =  filterSearchRequest.getExchange();
+            final String mic =  filterSearchRequest.getMic();
+            final String securityType = filterSearchRequest.getSecurityType();
+            final String currency =  filterSearchRequest.getCurrency();
+
+            List<Stock> stocks = filterSearchDataAccess.loadStocks(exchange, mic, securityType, currency);
+
+            FilterSearchResponse response =  new FilterSearchResponse(stocks);
+            filterSearchPresenter.prepareSuccessView(response);
+        }
+
+        catch (Exception e) {
+            filterSearchPresenter.prepareFailView("Unable to load filtered stocks.");
+        }
     }
 }

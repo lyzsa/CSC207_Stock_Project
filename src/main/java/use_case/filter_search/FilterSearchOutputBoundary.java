@@ -1,7 +1,5 @@
 package use_case.filter_search;
 
-import use_case.filter_search.FilterSearchOutputData;
-
 /**
  * The output boundary for the Filter Search Use Case.
  */
@@ -9,7 +7,9 @@ import use_case.filter_search.FilterSearchOutputData;
 public interface FilterSearchOutputBoundary {
     /**
      * Prepares the success view for the Filter Search Use Case.
-     * @param outputData the output data
+     * @param filterSearchResponse the output data
      */
-    void prepareSuccessView(FilterSearchOutputData outputData);
+    void prepareSuccessView(FilterSearchResponse filterSearchResponse);
+
+    void prepareFailView(String s);
 }

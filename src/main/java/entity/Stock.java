@@ -1,7 +1,5 @@
 package entity;
 
-import use_case.filter_search.FilterSearchInputData;
-
 public class Stock {
     private final String mic;
     private final String type;

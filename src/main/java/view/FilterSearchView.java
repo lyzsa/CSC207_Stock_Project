@@ -1,15 +1,12 @@
 package view;
 
+import entity.Stock;
 import interface_adapter.filter_search.FilterSearchController;
 import interface_adapter.filter_search.FilterSearchState;
 import interface_adapter.filter_search.FilterSearchViewModel;
-import interface_adapter.logged_in.ChangePasswordController;
-import interface_adapter.logout.LogoutController;
-import interface_adapter.signup.SignupState;
+import use_case.filter_search.FilterSearchInputBoundary;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -20,138 +17,32 @@ import java.beans.PropertyChangeListener;
  * The View for when the user is in the Filter Search Page.
  */
 
-public class FilterSearchView extends JPanel implements ActionListener, PropertyChangeListener {
-    private final String viewName = "Filter Search";
-    private final FilterSearchViewModel filterSearchViewModel;
-    private FilterSearchController filterSearchController = null;
+public class FilterSearchView extends JPanel implements PropertyChangeListener {
+    private FilterSearchController filterSearchController;
 
-    private final JLabel exchange = new JLabel("Exchange");
-    private final JLabel mic = new JLabel("MIC:");
-    private final JLabel securityType = new JLabel("Security Type:");
-    private final JLabel currency = new JLabel("Currency:");
-    private final JButton search;
-    private final JButton backToHomeButton;
+    private String ex;
+    private String mi;
+    private String sec;
+    private String curr;
 
-    private final String[] exchangeOptions = {"AD" ,
-            "AS" , "AT" , "AX" , "BA" , "BC" , "BD" , "BE" , "BH" , "BK" , "BO" , "BR" ,
-            "CA" , "CN" , "CO" , "CR" , "CS" , "DB" , "DE" , "DU" , "F" , "HE" , "HK" ,
-            "HM" , "IC" , "IR" , "IS" , "JK" , "JO" , "KL" , "KQ" , "KS" , "KW" , "L" ,
-            "LS" , "MC" , "ME" , "MI" , "MT" , "MU" , "MX" , "NE" , "NL" , "NS" , "NZ" ,
-            "OL" , "OM" , "PA" , "PM" , "PR" , "QA" , "RO" , "RG" , "SA" , "SG" , "SI" ,
-            "SN" , "SR" , "SS" , "ST" , "SW" , "SZ" , "T" , "TA" , "TL" , "TO" , "TW" ,
-            "TWO" , "US" , "V" , "VI" , "VN" , "VS" , "WA" , "HA" , "SX" , "TG" , "SC"};
-    private final String[] micOptions = {null, "XADS", "XAMS", "ASEX", "XASX", "XBUE", "XBOG", "XBUD", "XBER", "XBAH", "XBKK",
-            "XBOM", "XBRU", "XCAI", "XCNQ", "XCSE", "BVCA", "XCAS", "XDFM", "XETR", "XDUS", "XFRA", "XHEL", "XHKG",
-            "XHAM", "XICE", "XDUB", "XIST", "XIDX", "XJSE", "XKLS", "XKOS", "XKRX", "XKUW", "XLON", "XLIS", "XMAD",
-            "MISX", "XMIL", "XMAL", "XMUN", "XMEX", "NEOE", "XNSA", "XNSE", "XNZE", "XOSL", "XMUS", "XPAR", "XPHS",
-            "XPRA", "DSMD", "XBSE", "XRIS", "BVMF", "XSTU", "XSES", "XSGO", "XSAU", "XSHG", "XSTO", "WSWX", "XSHE",
-            "WJPX", "XTAE", "XTAL", "XTSE", "XTAI", "FNSE", "ROCO", "XTSX", "XWBO", "HSTC", "XLIT", "XWAR", "XHAN",
-            "XNYS", "XGAT", "XASE", "BATS", "ARCX", "XNMS", "XNCM", "XNGS", "IEXG", "XNAS", "OTCM", "OOTC", "XSTC",
-            "XHNX", "FNIS", "FNDK", "NFI"};
-    private final String[] securityOptions = {null, "ABS Auto", "ABS Card", "ABS Home", "ABS Other", "ACCEPT BANCARIA",
-            "ADJ CONV. TO FIXED", "ADJ CONV. TO FIXED, OID", "ADJUSTABLE", "ADJUSTABLE, OID", "ADR", "Agncy ABS Home",
-            "Agncy ABS Other", "Agncy CMBS", "Agncy CMO FLT", "Agncy CMO INV", "Agncy CMO IO", "Agncy CMO Other",
-            "Agncy CMO PO", "Agncy CMO Z", "Asset-Based", "ASSET-BASED BRIDGE", "ASSET-BASED BRIDGE REV",
-            "ASSET-BASED BRIDGE TERM", "ASSET-BASED DELAY-DRAW TERM", "ASSET-BASED DIP", "ASSET-BASED DIP DELAY-DRAW",
-            "ASSET-BASED DIP REV", "ASSET-BASED DIP TERM", "ASSET-BASED LOC", "ASSET-BASED PIK REV",
-            "ASSET-BASED PIK TERM", "ASSET-BASED REV", "ASSET-BASED TERM", "AUSTRALIAN", "AUSTRALIAN CD",
-            "AUSTRALIAN CP", "Austrian Crt", "BANK ACCEPT BILL", "BANK BILL", "BANK NOTE", "BANKERS ACCEPT",
-            "BANKERS ACCEPTANCE", "BASIS SWAP", "BASIS TRADE ON CLOSE", "Basket WRT", "BDR", "BEARER DEP NOTE",
-            "Belgium Cert", "BELGIUM CP", "BILL OF EXCHANGE", "BILLET A ORDRE", "Bond", "BRAZIL GENERIC",
-            "BRAZILIAN CDI", "BRIDGE", "BRIDGE DELAY-DRAW", "BRIDGE DELAY-DRAW TERM", "BRIDGE DIP TERM",
-            "BRIDGE GUARANTEE FAC", "BRIDGE ISLAMIC", "BRIDGE ISLAMIC TERM", "BRIDGE PIK", "BRIDGE PIK REV",
-            "BRIDGE PIK TERM", "BRIDGE REV", "BRIDGE REV GUARANTEE FAC", "BRIDGE STANDBY TERM", "BRIDGE TERM",
-            "BRIDGE TERM GUARANTEE FAC", "BRIDGE TERM VAT-TRNCH", "BRIDGE VAT-TRNCH", "BULLDOG", "BUTTERFLY SWAP",
-            "CAD INT BEAR CP", "CALC_INSTRUMENT", "Calendar Spread Option", "CALL LOANS", "CALLABLE CP", "CANADIAN",
-            "Canadian", "CANADIAN CD", "CANADIAN CP", "Canadian DR", "CAPS & FLOORS", "Car Forward", "CASH",
-            "CASH FLOW", "CASH FLOW, OID", "CASH RATE", "CBLO", "CD", "CDI", "CDR", "CEDEAR", "CF", "CHILEAN CD",
-            "CHILEAN DN", "Closed-End Fund", "CMBS", "Cmdt Fut WRT", "Cmdt Idx WRT", "COLLAT CALL NOTE", "COLOMBIAN CD",
-            "COMMERCIAL NOTE", "COMMERCIAL PAPER", "Commodity Index", "Common Stock", "CONTRACT FOR DIFFERENCE",
-            "CONTRACT FRA", "Conv Bond", "Conv Prfd", "Corp Bnd WRT", "Cover Pool", "CP-LIKE EXT NOTE", "CPI LINKED",
-            "CROSS", "Crypto", "Currency future.", "Currency option.", "Currency spot.", "Currency WRT", "CURVE_ROLL",
-            "DELAY-DRAW", "DELAY-DRAW ISLAMIC", "DELAY-DRAW ISLAMIC LOC", "DELAY-DRAW ISLAMIC TERM", "DELAY-DRAW LOC",
-            "DELAY-DRAW PIK TERM", "DELAY-DRAW STANDBY TERM", "DELAY-DRAW TERM", "DELAY-DRAW TERM GUARANTEE F",
-            "DELAY-DRAW TERM VAT-TRNCH", "DEPOSIT", "DEPOSIT NOTE", "DIM SUM BRIDGE TERM", "DIM SUM DELAY-DRAW TERM",
-            "DIM SUM REV", "DIM SUM TERM", "DIP", "DIP DELAY-DRAW ISLAMIC TERM", "DIP DELAY-DRAW PIK TERM",
-            "DIP DELAY-DRAW TERM", "DIP LOC", "DIP PIK TERM", "DIP REV", "DIP STANDBY LOC", "DIP SYNTH LOC",
-            "DIP TERM", "DISCOUNT FIXBIS", "DISCOUNT NOTES", "DIVIDEND NEUTRAL STOCK FUTURE", "DOMESTC TIME DEP",
-            "DOMESTIC", "DOMESTIC MTN", "Dutch Cert", "DUTCH CP", "EDR", "Equity Index", "Equity Option", "Equity WRT",
-            "ETP", "EURO CD", "EURO CP", "EURO MTN", "EURO NON-DOLLAR", "EURO STRUCTRD LN", "EURO TIME DEPST",
-            "EURO-DOLLAR", "EURO-ZONE", "EXTEND COMM NOTE", "EXTEND. NOTE MTN", "FDIC", "FED FUNDS", "FIDC",
-            "Financial commodity future.", "Financial commodity generic.", "Financial commodity option.",
-            "Financial commodity spot.", "Financial index future.", "Financial index generic.",
-            "Financial index option.", "FINNISH CD", "FINNISH CP", "FIXED", "Fixed Income Index", "FIXED, OID",
-            "FIXING RATE", "FLOATING", "FLOATING CP", "FLOATING, OID", "FNMA FHAVA", "Foreign Sh.", "FORWARD",
-            "FORWARD CROSS", "FORWARD CURVE", "FRA", "FRENCH CD", "French Cert", "FRENCH CP", "Fund of Funds",
-            "Futures Monthly Ticker", "FWD SWAP", "FX Curve", "FX DISCOUNT NOTE", "GDR", "Generic currency future.",
-            "Generic index future.", "German Cert", "GERMAN CP", "GLOBAL", "GUARANTEE FAC", "HB", "HDR", "HONG KONG CD",
-            "I.R. Fut WRT", "I.R. Swp WRT", "IDR", "IMM FORWARD", "IMM SWAP", "Index", "Index Option", "Index WRT",
-            "INDIAN CD", "INDIAN CP", "INDONESIAN CP", "Indx Fut WRT", "INFLATION SWAP", "INT BEAR FIXBIS",
-            "Int. Rt. WRT", "INTER. APPRECIATION", "INTER. APPRECIATION, OID", "ISLAMIC", "ISLAMIC BA", "ISLAMIC CP",
-            "ISLAMIC GUARANTEE FAC", "ISLAMIC LOC", "ISLAMIC REV", "ISLAMIC STANDBY", "ISLAMIC STANDBY REV",
-            "ISLAMIC STANDBY TERM", "ISLAMIC TERM", "ISLAMIC TERM GUARANTEE FAC", "ISLAMIC TERM VAT-TRNCH", "JUMBO CD",
-            "KOREAN CD", "KOREAN CP", "LEBANESE CP", "LIQUIDITY NOTE", "LOC", "LOC GUARANTEE FAC", "LOC TERM",
-            "Ltd Part", "MALAYSIAN CP", "Managed Account", "MARGIN TERM DEP", "MASTER NOTES", "MBS 10yr", "MBS 15yr",
-            "MBS 20yr", "MBS 30yr", "MBS 35yr", "MBS 40yr", "MBS 50yr", "MBS 5yr", "MBS 7yr", "MBS ARM", "MBS balloon",
-            "MBS Other", "MED TERM NOTE", "MEDIUM TERM CD", "MEDIUM TERM ECD", "MEXICAN CP", "MEXICAN PAGARE", "Misc.",
-            "MLP", "MONETARY BILLS", "MONEY MARKET CALL", "MUNI CP", "MUNI INT BEAR CP", "MUNI SWAP", "MURABAHA",
-            "Mutual Fund", "MV", "MX CERT BURSATIL", "NDF SWAP", "NEG EURO CP", "NEG INST DEPOSIT", "NEGOTIABLE CD",
-            "NEW ZEALAND CD", "NEW ZEALAND CP", "NON-DELIVERABLE FORWARD", "NON-DELIVERABLE IRS SWAP", "NVDR",
-            "NY Reg Shrs", "OID", "ONSHORE FORWARD", "ONSHORE SWAP", "Open-End Fund", "OPTION",
-            "Option on Equity Future", "OPTION VOLATILITY", "OTHER", "OVER/NIGHT", "OVERDRAFT",
-            "OVERNIGHT INDEXED SWAP", "PANAMANIAN CP", "Participate Cert", "PHILIPPINE CP",
-            "Physical commodity forward.", "Physical commodity future.", "Physical commodity generic.",
-            "Physical commodity option.", "Physical commodity spot.", "Physical index future.",
-            "Physical index option.", "PIK", "PIK LOC", "PIK REV", "PIK SYNTH LOC", "PIK TERM", "PLAZOS FIJOS",
-            "PORTUGUESE CP", "Preference", "Preferred", "PRES", "Prfd WRT", "PRIV PLACEMENT", "PRIVATE", "Private Comp",
-            "Private-equity backed", "PROMISSORY NOTE", "PROV T-BILL", "Prvt CMBS", "Prvt CMO FLT", "Prvt CMO INV",
-            "Prvt CMO IO", "Prvt CMO Other", "Prvt CMO PO", "Prvt CMO Z", "PUBLIC", "Pvt Eqty Fund", "RDC", "Receipt",
-            "REIT", "REPO", "RESERVE-BASED DIP REV", "RESERVE-BASED LOC", "RESERVE-BASED REV", "RESERVE-BASED TERM",
-            "RESTRUCTURD DEBT", "RETAIL CD", "RETURN IDX", "REV", "REV GUARANTEE FAC", "REV VAT-TRNCH", "Revolver",
-            "Right", "Royalty Trst", "S.TERM LOAN NOTE", "SAMURAI", "Savings Plan", "Savings Share", "SBA Pool", "SDR",
-            "Sec Lending", "SHOGUN", "SHORT TERM BN", "SHORT TERM DN", "SINGAPORE CP", "Singapore DR",
-            "SINGLE STOCK DIVIDEND FUTURE", "SINGLE STOCK FORWARD", "SINGLE STOCK FUTURE", "SINGLE STOCK FUTURE SPREAD",
-            "SN", "SPANISH CP", "SPECIAL LMMK PGM", "SPOT", "Spot index.", "STANDBY", "STANDBY LOC",
-            "STANDBY LOC GUARANTEE FAC", "STANDBY REV", "STANDBY TERM", "Stapled Security", "STERLING CD",
-            "STERLING CP", "Strategy Trade.", "SWAP" , "SWAP SPREAD" , "SWAPTION VOLATILITY" , "SWEDISH CP" ,
-            "SWINGLINE" , "Swiss Cert" , "SYNTH LOC" , "SYNTH REV" , "SYNTH TERM" , "Synthetic Term" , "TAIWAN CP" ,
-            "TAIWAN CP GUAR" , "TAIWAN NEGO CD" , "TAIWAN TIME DEPO" , "TAX CREDIT" , "TAX CREDIT, OID" , "TDR" ,
-            "TERM" , "TERM DEPOSITS" , "TERM GUARANTEE FAC" , "TERM REV" , "TERM VAT-TRNCH" , "TEST" , "THAILAND CP" ,
-            "TLTRO TERM" , "Tracking Stk" , "TREASURY BILL" , "U.S. CD" , "U.S. CP" , "U.S. INT BEAR CP" , "UIT" ,
-            "UK GILT STOCK" , "UMBS MBS Other" , "Unit" , "Unit Inv Tst" , "UNITRANCHE" , "UNITRANCHE ASSET-BASED REV",
-            "UNITRANCHE DELAY-DRAW PIK T" , "UNITRANCHE DELAY-DRAW TERM" , "UNITRANCHE PIK REV" , "UNITRANCHE PIK TERM",
-            "UNITRANCHE REV" , "UNITRANCHE TERM" , "US DOMESTIC" , "US GOVERNMENT" , "US NON-DOLLAR" ,
-            "VAR RATE DEM OBL" , "VAT-TRNCH" , "VENEZUELAN CP" , "VIETNAMESE CD" , "VOLATILITY DERIVATIVE" , "Warrant",
-            "YANKEE" , "YANKEE CD" , "YEN CD" , "YEN CP" , "Yield Curve" , "ZERO COUPON" , "ZERO COUPON, OID"};
-    private final String[] currencyOptions = {null, "ADP", "AED", "AFN", "ALL", "AMD", "ANG", "AOA", "ARS", "ATS", "AUD",
-            "AUd", "AWG", "AZM", "AZN", "BAM", "BBD", "BDT", "BEF", "BGN", "BHD", "BIF", "BMD", "BND", "BOB", "BRL",
-            "BRl", "BSD", "BTN", "BWP", "BWp", "BYN", "BYR", "BYS", "BZD", "CAD", "CAd", "CDF", "CER", "CHF", "CHf",
-            "CLF", "CLP", "CNH", "CNT", "CNY", "COP", "COU", "CRC", "CRS", "CUP", "CVE", "CYP", "CZK", "DEM", "DJF",
-            "DKK", "DOP", "DZD", "ECS", "EEK", "EES", "EGD", "EGP", "ERN", "ESP", "ETB", "EUA", "EUR", "EUr", "FIM",
-            "FJD", "FKP", "FRF", "GBP", "GBp", "GEL", "GHC", "GHS", "GIP", "GLD", "GMD", "GNF", "GRD", "GTQ", "GWP",
-            "GYD", "HKD", "HNL", "HRK", "HTG", "HUF", "IDR", "IEP", "ILS", "ILs", "INR", "IQD", "IRR", "ISK", "ITL",
-            "JEP", "JMD", "JOD", "JPY", "KES", "KGS", "KHR", "KMF", "KPW", "KRW", "KWD", "KWd", "KYD", "KZT", "LAK",
-            "LBP", "LKR", "LRD", "LSL", "LTL", "LUF", "LVL", "LYD", "MAD", "MDL", "MGA", "MGF", "MKD", "MLF", "MMK",
-            "MNT", "MOP", "MRO", "MRU", "MTL", "MULTI", "MUR", "MVR", "MWK", "MWk", "MXN", "MYR", "MYr", "MZM", "MZN",
-            "NAD", "NAd", "NGN", "NIC", "NID", "NIO", "NLG", "NOK", "NPR", "NZD", "OMR", "PAB", "PEN", "PGK", "PHP",
-            "PKR", "PLD", "PLN", "PLT", "PTE", "PYG", "QAR", "ROL", "RON", "RSD", "RUB", "RWF", "SAR", "SBD", "SCR",
-            "SDD", "SDG", "SDP", "SDR", "SEK", "SGD", "SGd", "SHP", "SIT", "SKK", "SLE", "SLL", "SLV", "SOS", "SPL",
-            "SRD", "SRG", "SSP", "STD", "STN", "SVC", "SYP", "SZL", "SZl", "THB", "THO", "TJS", "TMM", "TMT", "TND",
-            "TOP", "TPE", "TRL", "TRY", "TTD", "TVD", "TWD", "TZS", "UAH", "UDI", "UGX", "US", "USD", "USd", "UVR",
-            "UYI", "UYU", "UYW", "UZS", "VEB", "VEE", "VEF", "VES", "VND", "VUV", "WST", "X0S", "X1S", "X2S", "X3S",
-            "X4S", "X5S", "X6S", "X7S", "X8S", "X9S", "XAD", "XAF", "XAG", "XAL", "XAO", "XAS", "XAU", "XAV", "XBA",
-            "XBI", "XBN", "XBS", "XBT", "XBW", "XCD", "XCG", "XCR", "XCS", "XCU", "XDG", "XDH", "XDI", "XDO", "XDR",
-            "XDT", "XEG", "XEN", "XEO", "XET", "XEU", "XFI", "XFL", "XFM", "XFT", "XGZ", "XHB", "XIC", "XIN", "XIO",
-            "XLC", "XLI", "XLM", "XLU", "XMA", "XMK", "XMN", "XMR", "XNI", "XOF", "XPB", "XPD", "XPF", "XPT", "XRA",
-            "XRH", "XRI", "XRP", "XRU", "XSA", "XSN", "XSO", "XST", "XSU", "XSZ", "XTH", "XTK", "XTR", "XUC", "XUN",
-            "XUT", "XVC", "XVV", "XXT", "XZC", "XZI", "YER", "ZAR", "ZAr", "ZMK", "ZMW", "ZWD", "ZWd", "ZWF", "ZWG",
-            "ZWg", "ZWL", "ZWN", "ZWR"};
+    private static final int COL_SYMBOL = 0;
+    private static final int COL_DESCRIPTION  = 1;
+    private static final int COL_CURRENCY    = 2;
+    private static final int COL_DISPLAY   = 3;
+    private static final int COL_FIGI = 4;
+    private static final int COL_MIC  = 5;
+    private static final int COL_TYPE = 6;
 
 
 
     public FilterSearchView(FilterSearchViewModel filterSearchViewModel) {
-        this.filterSearchViewModel = filterSearchViewModel;
-        this.filterSearchViewModel.addPropertyChangeListener(this);
+        filterSearchViewModel.addPropertyChangeListener(this);
+
+        final String[] exchangeOptions = FilterSearchInputBoundary.EXCHANGE_OPTIONS;
+        final String[] micOptions = FilterSearchInputBoundary.MIC_OPTIONS;
+        final String[] securityOptions = FilterSearchInputBoundary.SECURITY_OPTIONS;
+        final String[] currencyOptions = FilterSearchInputBoundary.CURRENCY_OPTIONS;
+
 
         final JLabel title = new JLabel("Filter Search");
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -160,7 +51,7 @@ public class FilterSearchView extends JPanel implements ActionListener, Property
         final JComboBox<String> micDrop = new JComboBox<String>(micOptions);
         final JComboBox<String> securityDrop = new JComboBox<String>(securityOptions);
         final JComboBox<String> currencyDrop = new JComboBox<String>(currencyOptions);
-        this.search = new JButton("Search");
+        JButton search = new JButton("Search");
 
         this.setLayout(new BorderLayout());
 
@@ -168,23 +59,27 @@ public class FilterSearchView extends JPanel implements ActionListener, Property
         this.add(topPanel, BorderLayout.NORTH);
 
         JPanel panel_e = new JPanel();
+        JLabel exchange = new JLabel("Exchange");
         panel_e.add(exchange);
         panel_e.add(exchangeDrop);
 
         JPanel panel_m = new JPanel();
+        JLabel mic = new JLabel("MIC:");
         panel_m.add(mic);
         panel_m.add(micDrop);
 
         JPanel panel_s = new JPanel();
+        JLabel securityType = new JLabel("Security Type:");
         panel_s.add(securityType);
         panel_s.add(securityDrop);
 
         JPanel panel_c = new JPanel();
+        JLabel currency = new JLabel("Currency:");
         panel_c.add(currency);
         panel_c.add(currencyDrop);
 
         JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        backToHomeButton = new JButton("Back");
+        JButton backToHomeButton = new JButton("Back");
         leftPanel.add(backToHomeButton);
         topPanel.add(leftPanel, BorderLayout.WEST);
 
@@ -196,7 +91,7 @@ public class FilterSearchView extends JPanel implements ActionListener, Property
 
         JPanel mainPanel = new JPanel();
 
-
+        String[] columnNames = {"Symbol", "Description", "Currency", "Display Symbol", "FIGI", "MIC", "Security Type"};
 
 
         backToHomeButton.addActionListener(e -> {
@@ -227,7 +122,7 @@ public class FilterSearchView extends JPanel implements ActionListener, Property
                 curr =  currencyDrop.getSelectedItem().toString();
             }
 
-            filterSearchController.loadFilterSearch(ex , mi, sec, curr);
+            filterSearchController.loadStocks(ex , mi, sec, curr);
 
         });
 
@@ -235,13 +130,9 @@ public class FilterSearchView extends JPanel implements ActionListener, Property
 
 
     }
-    @Override
-    public void actionPerformed(ActionEvent evt) {
-        /* TODO add search results */
-
-    }
 
     public String getViewName() {
+        String viewName = "Filter Search";
         return viewName;
     }
 
@@ -253,7 +144,6 @@ public class FilterSearchView extends JPanel implements ActionListener, Property
     public void propertyChange(PropertyChangeEvent evt) {
         final FilterSearchState state = (FilterSearchState) evt.getNewValue();
     }
-
 
 
 }
