@@ -10,10 +10,12 @@ public class Main {
                 .addSignupView()
                 .addLoggedInView()
                 .addNewsView()
+                .addEarningsHistoryView()
                 .addSignupUseCase()
                 .addLoginUseCase()
                 .addChangePasswordUseCase()
                 .addNewsUsecase()
+                .addEarningsHistoryUsecase()
                 .build();
 
         application.pack();

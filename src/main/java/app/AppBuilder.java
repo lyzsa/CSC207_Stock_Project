@@ -1,5 +1,15 @@
 package app;
 
+import data_access.FinnhubEarningsDataAccessObject;
+import interface_adapter.earnings_history.EarningsHistoryController;
+import interface_adapter.earnings_history.EarningsHistoryPresenter;
+import interface_adapter.earnings_history.EarningsHistoryViewModel;
+import use_case.earnings_history.EarningsDataAccessInterface;
+import use_case.earnings_history.GetEarningsHistoryInputBoundary;
+import use_case.earnings_history.GetEarningsHistoryInteractor;
+import use_case.earnings_history.GetEarningsHistoryOutputBoundary;
+import view.EarningsHistoryView;
+
 import data_access.FileUserDataAccessObject;
 import data_access.NewsDataAccessObject;
 import entity.UserFactory;
@@ -51,6 +61,9 @@ public class AppBuilder {
     // DAO version using local file storage
     final FileUserDataAccessObject userDataAccessObject = new FileUserDataAccessObject("users.csv", userFactory);
     final NewsDataAccessObject newsDataAccessObject = new NewsDataAccessObject("d4lpdgpr01qr851prp30d4lpdgpr01qr851prp3g");
+    // DAO for earnings history
+    final EarningsDataAccessInterface earningsDataAccessObject =
+            new FinnhubEarningsDataAccessObject();
 
 
     // DAO version using a shared external database
@@ -64,6 +77,9 @@ public class AppBuilder {
     private LoginView loginView;
     private NewsViewModel newsViewModel;
     private NewsView newsView;
+    private EarningsHistoryViewModel earningsHistoryViewModel;
+    private EarningsHistoryView earningsHistoryView;
+
 
     public AppBuilder() {
         cardPanel.setLayout(cardLayout);
@@ -101,6 +117,27 @@ public class AppBuilder {
         cardPanel.add(newsView, newsView.getViewName());
         return this;
     }
+    public AppBuilder addEarningsHistoryView() {
+        // ViewModel
+        earningsHistoryViewModel = new EarningsHistoryViewModel();
+
+        // Presenter + interactor
+        GetEarningsHistoryOutputBoundary outputBoundary =
+                new EarningsHistoryPresenter(earningsHistoryViewModel);
+        GetEarningsHistoryInputBoundary interactor =
+                new GetEarningsHistoryInteractor(earningsDataAccessObject, outputBoundary);
+
+        // Controller
+        EarningsHistoryController controller =
+                new EarningsHistoryController(interactor, earningsHistoryViewModel);
+
+        // Swing view
+        earningsHistoryView = new EarningsHistoryView(controller, earningsHistoryViewModel);
+
+        cardPanel.add(earningsHistoryView, earningsHistoryView.getViewName());
+        return this;
+    }
+
 
     public AppBuilder addSignupUseCase() {
         final SignupOutputBoundary signupOutputBoundary = new SignupPresenter(viewManagerModel,
@@ -142,6 +179,17 @@ public class AppBuilder {
 
         // News page: Back button → Logged-in view
         newsView.setBackNavigation(viewManagerModel, loggedInView.getViewName());
+
+        return this;
+    }
+    public AppBuilder addEarningsHistoryUseCase() {
+        // Logged-in page: History button → Earnings history view
+        loggedInView.setHistoryNavigation(
+                viewManagerModel, earningsHistoryView.getViewName());
+
+        // Earnings history page: Back button → Logged-in view
+        earningsHistoryView.setBackNavigation(
+                viewManagerModel, loggedInView.getViewName());
 
         return this;
     }

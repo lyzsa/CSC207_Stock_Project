@@ -29,6 +29,7 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
     private NewsController newsController;
     private ViewManagerModel viewManagerModel;
     private String newsViewName;
+    private String historyViewName;
 
     private final JLabel username;
 
@@ -41,6 +42,7 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
     private final JButton searchButton = new JButton("Search");
     private final JTextArea stockInfoArea = new JTextArea();
     private final JButton addToWatchlistButton = new JButton("Add to Watchlist");
+    private final JButton historyButton;
 
     public LoggedInView(LoggedInViewModel loggedInViewModel) {
         this.loggedInViewModel = loggedInViewModel;
@@ -67,7 +69,13 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
         });
 
         final JButton filterSearchButton = new JButton("Filter Search");
-        final JButton historyButton = new JButton("History");
+        historyButton = new JButton("History");
+        historyButton.addActionListener(e -> {
+            if (viewManagerModel != null && historyViewName != null) {
+                viewManagerModel.setState(historyViewName);
+                viewManagerModel.firePropertyChange();
+            }
+        });
         final JButton marketOpenButton = new JButton("Market Open");
         final JButton accountButton = new JButton("Account");
 
@@ -113,6 +121,8 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
                 currentState.setPassword(passwordInputField.getText());
                 loggedInViewModel.setState(currentState);
             }
+
+
 
             @Override
             public void insertUpdate(DocumentEvent e) {
@@ -190,4 +200,13 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
         this.viewManagerModel = viewManagerModel;
         this.newsViewName = newsViewName;
     }
+
+    public void setHistoryNavigation(ViewManagerModel viewManagerModel,
+                                     String historyViewName) {
+        this.viewManagerModel = viewManagerModel;
+        this.historyViewName = historyViewName;
+    }
+
 }
+
+
