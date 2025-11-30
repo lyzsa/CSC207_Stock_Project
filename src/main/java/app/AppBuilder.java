@@ -104,7 +104,8 @@ public class AppBuilder {
         filterSearchViewModel = new FilterSearchViewModel();
         filterSearchView = new FilterSearchView(filterSearchViewModel);
         cardPanel.add(filterSearchView, filterSearchView.getViewName());
-      return this;
+        return this;
+    }
       
     public AppBuilder addNewsView() {
         newsViewModel = new NewsViewModel();
@@ -155,10 +156,12 @@ public class AppBuilder {
     public AppBuilder addFilterSearchUseCase() {
         final FilterSearchOutputBoundary filterSearchOutputBoundary = new FilterSearchPresenter(filterSearchViewModel);
         final FilterSearchInputBoundary filterSearchInteractor =
-                new FilterSearchInteractor( filterSearchDataAccessObject, filterSearchOutputBoundary);
+                new FilterSearchInteractor(filterSearchDataAccessObject, filterSearchOutputBoundary);
 
         FilterSearchController filterSearchController = new FilterSearchController(filterSearchInteractor);
         filterSearchView.setFilterSearchController(filterSearchController);
+        return this;
+    }
       
     public AppBuilder addNewsUsecase() {
         // Logged-in page: News button → News view
