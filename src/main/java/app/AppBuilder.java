@@ -72,6 +72,8 @@ public class AppBuilder {
     final NewsDataAccessObject newsDataAccessObject = new NewsDataAccessObject(apiKey);
     final MarketStatusDataAccessInterface marketStatusDataAccessObject =
             new MarketStatusDataAccessObject(apiKey);
+    final FilterSearchDataAccessObject filterSearchDataAccessObject =
+            new FilterSearchDataAccessObject(apiKey);
 
     // DAO version using a shared external database
     // final DBUserDataAccessObject userDataAccessObject = new DBUserDataAccessObject(userFactory);
@@ -174,6 +176,9 @@ public class AppBuilder {
 
         FilterSearchController filterSearchController = new FilterSearchController(filterSearchInteractor);
         filterSearchView.setFilterSearchController(filterSearchController);
+
+        loggedInView.setFilterSearchNavigation(viewManagerModel, filterSearchView.getViewName());
+        filterSearchView.setBackNavigation(viewManagerModel, loggedInView.getViewName());
         return this;
     }
       
