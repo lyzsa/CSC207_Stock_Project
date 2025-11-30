@@ -49,8 +49,9 @@ public class AppBuilder {
     // of the classes from the data_access package
 
     // DAO version using local file storage
-    final NewsDataAccessObject newsDataAccessObject = new NewsDataAccessObject("d4lpdgpr01qr851prp30d4lpdgpr01qr851prp3g");
     final FileUserDataAccessObject userDataAccessObject = new FileUserDataAccessObject("users.csv", userFactory);
+    final NewsDataAccessObject newsDataAccessObject = new NewsDataAccessObject("d4lpdgpr01qr851prp30d4lpdgpr01qr851prp3g");
+
 
     // DAO version using a shared external database
     // final DBUserDataAccessObject userDataAccessObject = new DBUserDataAccessObject(userFactory);
@@ -61,6 +62,8 @@ public class AppBuilder {
     private LoggedInViewModel loggedInViewModel;
     private LoggedInView loggedInView;
     private LoginView loginView;
+    private NewsViewModel newsViewModel;
+    private NewsView newsView;
 
     public AppBuilder() {
         cardPanel.setLayout(cardLayout);
@@ -88,11 +91,13 @@ public class AppBuilder {
     }
 
     public AppBuilder addNewsView() {
-        NewsViewModel newsViewModel = new NewsViewModel();
+        newsViewModel = new NewsViewModel();
         NewsOutputBoundary newsOutputBoundary = new NewsPresenter(newsViewModel);
-        NewsInputBoundary newsInputBoundary = new NewsInteractor(newsDataAccessObject, newsOutputBoundary);
+        NewsInputBoundary newsInputBoundary =
+                new NewsInteractor(newsDataAccessObject, newsOutputBoundary);
         NewsController newsController = new NewsController(newsInputBoundary);
-        NewsView newsView = new NewsView(newsController, newsViewModel);
+
+        newsView = new NewsView(newsController, newsViewModel);
         cardPanel.add(newsView, newsView.getViewName());
         return this;
     }
@@ -132,12 +137,12 @@ public class AppBuilder {
     }
 
     public AppBuilder addNewsUsecase() {
-        NewsViewModel newsViewModel = new NewsViewModel();
-        NewsOutputBoundary newsOutputBoundary = new NewsPresenter(newsViewModel);
+        // Logged-in page: News button → News view
+        loggedInView.setNewsNavigation(viewManagerModel, newsView.getViewName());
 
-        NewsInputBoundary newsInputBoundary = new NewsInteractor(newsDataAccessObject, newsOutputBoundary);
-        NewsController newsController = new NewsController(newsInputBoundary);
-        loggedInView.setNewsController(newsController);
+        // News page: Back button → Logged-in view
+        newsView.setBackNavigation(viewManagerModel, loggedInView.getViewName());
+
         return this;
     }
 
