@@ -58,7 +58,7 @@ public class EarningsHistoryView extends JPanel implements PropertyChangeListene
         return viewName;
     }
 
-    // NEW: AppBuilder calls this so the Back button knows where to go
+    // AppBuilder calls this so the Back button knows where to go
     public void setBackNavigation(ViewManagerModel viewManagerModel,
                                   String loggedInViewName) {
         backButton.addActionListener(e -> {
