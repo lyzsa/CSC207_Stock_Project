@@ -133,35 +133,37 @@ public class FilterSearchView extends JPanel implements PropertyChangeListener {
             List<Stock> res;
             try {
                 res = obj.loadStocks(ex, mi, sec, curr);
+
+                Object[][] data = new Object[res.size()][7];
+
+                for (int i = 0; i < res.size(); i++) {
+                    Object[] temp = new Object[7];
+                    temp[0] = res.get(i).getSymbol();
+                    temp[1] = res.get(i).getDescription();
+                    temp[2] = res.get(i).getCurrency();
+                    temp[3] = res.get(i).getDisplaySymbol();
+                    temp[4] = res.get(i).getFigi();
+                    temp[5] = res.get(i).getMic();
+                    temp[6] = res.get(i).getType();
+
+
+                    data[i] =  temp;
+                }
+
+                JTable table = new JTable(data, columnNames);
+                table.setPreferredScrollableViewportSize(new Dimension(800, 800));
+                table.setFillsViewportHeight(true);
+
+                JScrollPane scrollPane = new JScrollPane(table);
+
+                mainPanel.add(scrollPane, BorderLayout.CENTER);
+
+                this.add(mainPanel, BorderLayout.CENTER);
             } catch (Exception exc) {
-                throw new RuntimeException(exc);
+                this.add(new JLabel("Error while loading stocks!"));
             }
 
-            Object[][] data = new Object[res.size()][7];
 
-            for (int i = 0; i < res.size(); i++) {
-                Object[] temp = new Object[7];
-                temp[0] = res.get(i).getSymbol();
-                temp[1] = res.get(i).getDescription();
-                temp[2] = res.get(i).getCurrency();
-                temp[3] = res.get(i).getDisplaySymbol();
-                temp[4] = res.get(i).getFigi();
-                temp[5] = res.get(i).getMic();
-                temp[6] = res.get(i).getType();
-
-
-                data[i] =  temp;
-            }
-
-            JTable table = new JTable(data, columnNames);
-            table.setPreferredScrollableViewportSize(new Dimension(100, 100));
-            table.setFillsViewportHeight(true);
-
-            JScrollPane scrollPane = new JScrollPane(table);
-
-            mainPanel.add(scrollPane, BorderLayout.CENTER);
-
-            this.add(mainPanel, BorderLayout.CENTER);
 
         });
 
