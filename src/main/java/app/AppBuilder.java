@@ -133,7 +133,7 @@ public class AppBuilder {
     public AppBuilder addFilterSearchUseCase() {
         final FilterSearchOutputBoundary filterSearchOutputBoundary = new FilterSearchPresenter(filterSearchViewModel,
                 viewManagerModel);
-        String key = "REPLACE";
+        String key = "d4lpdgpr01qr851prp30d4lpdgpr01qr851prp3g";
         FilterSearchDataAccessInterface filterObject = new FilterSearchDataAccessObject(key);
         final FilterSearchInputBoundary filterSearchInteractor =
                 new FilterSearchInteractor( filterObject, filterSearchOutputBoundary);
