@@ -2,6 +2,7 @@ package view;
 
 import interface_adapter.news.NewsController;
 import interface_adapter.news.NewsViewModel;
+import interface_adapter.ViewManagerModel;
 import entity.NewsArticle;
 
 import javax.swing.*;
@@ -18,6 +19,9 @@ import javax.swing.JTextArea;
 
 
 public class NewsView extends JPanel implements PropertyChangeListener {
+
+    private ViewManagerModel viewManagerModel;
+    private String homeViewName;
 
     private final String viewName = "news";
 
@@ -161,14 +165,10 @@ public class NewsView extends JPanel implements PropertyChangeListener {
 
         // Back to Home – placeholder for now
         backToHomeButton.addActionListener(e -> {
-            // TODO: implement navigation back to the main/home view.
-            // For now, you can leave this empty or show a message:
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Back to Home is not implemented yet.",
-                    "Info",
-                    JOptionPane.INFORMATION_MESSAGE
-            );
+            if (viewManagerModel != null && homeViewName != null) {
+                viewManagerModel.setState(homeViewName);
+                viewManagerModel.firePropertyChange();
+            }
         });
 
         // Market news – load top market news into centre table
@@ -274,5 +274,10 @@ public class NewsView extends JPanel implements PropertyChangeListener {
 
     public String getViewName(){
         return this.viewName;
+    }
+
+    public void setBackNavigation(ViewManagerModel viewManagerModel, String homeViewName) {
+        this.viewManagerModel = viewManagerModel;
+        this.homeViewName = homeViewName;
     }
 }
