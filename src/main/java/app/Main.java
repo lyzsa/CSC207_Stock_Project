@@ -14,6 +14,7 @@ public class Main {
                 .addLoginUseCase()
                 .addChangePasswordUseCase()
                 .addNewsUsecase()
+                .addMarketStatusUseCase()
                 .build();
 
         application.pack();

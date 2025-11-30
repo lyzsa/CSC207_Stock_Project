@@ -33,6 +33,14 @@ import use_case.news.NewsOutputBoundary;
 import use_case.signup.SignupInputBoundary;
 import use_case.signup.SignupInteractor;
 import use_case.signup.SignupOutputBoundary;
+import interface_adapter.market_status.MarketStatusViewModel;
+import interface_adapter.market_status.MarketStatusPresenter;
+import interface_adapter.market_status.MarketStatusController;
+import use_case.market_status.MarketStatusInputBoundary;
+import use_case.market_status.MarketStatusInteractor;
+import use_case.market_status.MarketStatusOutputBoundary;
+import use_case.market_status.MarketStatusDataAccessInterface;
+import data_access.MarketStatusDataAccessObject;
 import view.*;
 
 import javax.swing.*;
@@ -48,10 +56,14 @@ public class AppBuilder {
     // set which data access implementation to use, can be any
     // of the classes from the data_access package
 
+    // This key should be retrieved from the environment
+    String apiKey = "d4lpdgpr01qr851prp30d4lpdgpr01qr851prp3g";
+
     // DAO version using local file storage
     final FileUserDataAccessObject userDataAccessObject = new FileUserDataAccessObject("users.csv", userFactory);
-    final NewsDataAccessObject newsDataAccessObject = new NewsDataAccessObject("d4lpdgpr01qr851prp30d4lpdgpr01qr851prp3g");
-
+    final NewsDataAccessObject newsDataAccessObject = new NewsDataAccessObject(apiKey);
+    final MarketStatusDataAccessInterface marketStatusDataAccessObject =
+            new MarketStatusDataAccessObject(apiKey);
 
     // DAO version using a shared external database
     // final DBUserDataAccessObject userDataAccessObject = new DBUserDataAccessObject(userFactory);
@@ -64,6 +76,8 @@ public class AppBuilder {
     private LoginView loginView;
     private NewsViewModel newsViewModel;
     private NewsView newsView;
+    private MarketStatusViewModel marketStatusViewModel;
+    private MarketStatusController marketStatusController;
 
     public AppBuilder() {
         cardPanel.setLayout(cardLayout);
@@ -159,6 +173,17 @@ public class AppBuilder {
 
         final LogoutController logoutController = new LogoutController(logoutInteractor);
         loggedInView.setLogoutController(logoutController);
+        return this;
+    }
+
+    public AppBuilder addMarketStatusUseCase() {
+        marketStatusViewModel = new MarketStatusViewModel();
+        MarketStatusOutputBoundary msPresenter = new MarketStatusPresenter(marketStatusViewModel);
+        MarketStatusDataAccessInterface msDao = marketStatusDataAccessObject;
+        MarketStatusInputBoundary msInteractor = new MarketStatusInteractor(msDao, msPresenter);
+        marketStatusController = new MarketStatusController(msInteractor);
+        loggedInView.setMarketStatusViewModel(marketStatusViewModel);
+        marketStatusController.updateStatus();
         return this;
     }
 
