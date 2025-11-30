@@ -6,6 +6,7 @@ import interface_adapter.logged_in.LoggedInViewModel;
 import interface_adapter.logout.LogoutController;
 import interface_adapter.news.NewsController;
 import interface_adapter.ViewManagerModel;
+import interface_adapter.market_status.MarketStatusViewModel;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -30,6 +31,8 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
     private ViewManagerModel viewManagerModel;
     private String newsViewName;
     private String historyViewName;
+    private JLabel marketStatusLabel;
+    private MarketStatusViewModel marketStatusViewModel;
 
     private final JLabel username;
 
@@ -86,6 +89,13 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
         topToolbar.add(accountButton);
 
         this.add(topToolbar, BorderLayout.NORTH);
+
+        marketStatusLabel = new JLabel("Loading market status...");
+        marketStatusLabel.setFont(marketStatusLabel.getFont().deriveFont(Font.PLAIN, 11f));
+        marketStatusLabel.setForeground(Color.DARK_GRAY);
+
+        topToolbar.add(Box.createHorizontalStrut(20));
+        topToolbar.add(marketStatusLabel);
 
         final JPanel centerPanel = new JPanel();
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
@@ -209,3 +219,36 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
 }
 
 
+    public void setMarketStatusViewModel(MarketStatusViewModel viewModel) {
+        this.marketStatusViewModel = viewModel;
+
+        // Listen for changes in market status
+        this.marketStatusViewModel.addPropertyChangeListener(evt -> {
+            if (!"state".equals(evt.getPropertyName())) return;
+            updateMarketStatusLabel();
+        });
+    }
+
+    private void updateMarketStatusLabel() {
+        if (marketStatusViewModel == null) {
+            return;
+        }
+
+        String text = marketStatusViewModel.getStatusText();
+        if (text == null || text.isBlank()) {
+            marketStatusLabel.setText("Market status unavailable");
+            marketStatusLabel.setForeground(Color.GRAY);
+            return;
+        }
+
+        marketStatusLabel.setText(text);
+
+        if (marketStatusViewModel.getErrorMessage() != null) {
+            marketStatusLabel.setForeground(Color.RED);
+        } else if (marketStatusViewModel.isOpen()) {
+            marketStatusLabel.setForeground(new Color(0, 128, 0)); // green-ish
+        } else {
+            marketStatusLabel.setForeground(Color.GRAY);
+        }
+    }
+}

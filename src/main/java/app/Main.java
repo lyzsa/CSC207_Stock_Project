@@ -9,6 +9,11 @@ public class Main {
                 .addLoginView()
                 .addSignupView()
                 .addLoggedInView()
+                .addFilterSearchView()
+                .addSignupUseCase()
+                .addLoginUseCase()
+                .addChangePasswordUseCase()
+                .addFilterSearchUseCase()
                 .addNewsView()
                 .addEarningsHistoryView()
                 .addSignupUseCase()
@@ -16,6 +21,7 @@ public class Main {
                 .addChangePasswordUseCase()
                 .addNewsUsecase()
                 .addEarningsHistoryUsecase()
+                .addMarketStatusUseCase()
                 .build();
 
         application.pack();
