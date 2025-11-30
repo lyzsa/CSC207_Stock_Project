@@ -1,9 +1,13 @@
 package app;
 
 import data_access.FileUserDataAccessObject;
+import data_access.FilterSearchDataAccessObject;
 import data_access.NewsDataAccessObject;
 import entity.UserFactory;
 import interface_adapter.ViewManagerModel;
+import interface_adapter.filter_search.FilterSearchController;
+import interface_adapter.filter_search.FilterSearchPresenter;
+import interface_adapter.filter_search.FilterSearchViewModel;
 import interface_adapter.logged_in.ChangePasswordController;
 import interface_adapter.logged_in.ChangePasswordPresenter;
 import interface_adapter.logged_in.LoggedInViewModel;
@@ -21,6 +25,10 @@ import interface_adapter.signup.SignupViewModel;
 import use_case.change_password.ChangePasswordInputBoundary;
 import use_case.change_password.ChangePasswordInteractor;
 import use_case.change_password.ChangePasswordOutputBoundary;
+import use_case.filter_search.FilterSearchDataAccessInterface;
+import use_case.filter_search.FilterSearchInputBoundary;
+import use_case.filter_search.FilterSearchInteractor;
+import use_case.filter_search.FilterSearchOutputBoundary;
 import use_case.login.LoginInputBoundary;
 import use_case.login.LoginInteractor;
 import use_case.login.LoginOutputBoundary;
@@ -51,7 +59,7 @@ public class AppBuilder {
     // DAO version using local file storage
     final FileUserDataAccessObject userDataAccessObject = new FileUserDataAccessObject("users.csv", userFactory);
     final NewsDataAccessObject newsDataAccessObject = new NewsDataAccessObject("d4lpdgpr01qr851prp30d4lpdgpr01qr851prp3g");
-
+    final FilterSearchDataAccessObject filterSearchDataAccessObject = new FilterSearchDataAccessObject("d4lpdgpr01qr851prp30d4lpdgpr01qr851prp3g");
 
     // DAO version using a shared external database
     // final DBUserDataAccessObject userDataAccessObject = new DBUserDataAccessObject(userFactory);
@@ -62,6 +70,8 @@ public class AppBuilder {
     private LoggedInViewModel loggedInViewModel;
     private LoggedInView loggedInView;
     private LoginView loginView;
+    private FilterSearchViewModel filterSearchViewModel;
+    private FilterSearchView filterSearchView;
     private NewsViewModel newsViewModel;
     private NewsView newsView;
 
@@ -90,6 +100,12 @@ public class AppBuilder {
         return this;
     }
 
+    public AppBuilder addFilterSearchView() {
+        filterSearchViewModel = new FilterSearchViewModel();
+        filterSearchView = new FilterSearchView(filterSearchViewModel);
+        cardPanel.add(filterSearchView, filterSearchView.getViewName());
+      return this;
+      
     public AppBuilder addNewsView() {
         newsViewModel = new NewsViewModel();
         NewsOutputBoundary newsOutputBoundary = new NewsPresenter(newsViewModel);
@@ -136,6 +152,14 @@ public class AppBuilder {
         return this;
     }
 
+    public AppBuilder addFilterSearchUseCase() {
+        final FilterSearchOutputBoundary filterSearchOutputBoundary = new FilterSearchPresenter(filterSearchViewModel);
+        final FilterSearchInputBoundary filterSearchInteractor =
+                new FilterSearchInteractor( filterSearchDataAccessObject, filterSearchOutputBoundary);
+
+        FilterSearchController filterSearchController = new FilterSearchController(filterSearchInteractor);
+        filterSearchView.setFilterSearchController(filterSearchController);
+      
     public AppBuilder addNewsUsecase() {
         // Logged-in page: News button → News view
         loggedInView.setNewsNavigation(viewManagerModel, newsView.getViewName());
