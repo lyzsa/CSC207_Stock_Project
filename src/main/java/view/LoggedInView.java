@@ -5,6 +5,7 @@ import interface_adapter.logged_in.LoggedInState;
 import interface_adapter.logged_in.LoggedInViewModel;
 import interface_adapter.logout.LogoutController;
 import interface_adapter.news.NewsController;
+import interface_adapter.ViewManagerModel;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -26,6 +27,8 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
     private ChangePasswordController changePasswordController = null;
     private LogoutController logoutController;
     private NewsController newsController;
+    private ViewManagerModel viewManagerModel;
+    private String newsViewName;
 
     private final JLabel username;
 
@@ -53,7 +56,16 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
         this.setLayout(new BorderLayout());
 
         final JPanel topToolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
+
         final JButton newsButton = new JButton("News");
+        newsButton.addActionListener(e -> {
+            System.out.println("News button clicked"); // debug
+            if (viewManagerModel != null && newsViewName != null) {
+                viewManagerModel.setState(newsViewName);
+                viewManagerModel.firePropertyChange();
+            }
+        });
+
         final JButton filterSearchButton = new JButton("Filter Search");
         final JButton historyButton = new JButton("History");
         final JButton marketOpenButton = new JButton("Market Open");
@@ -170,11 +182,12 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
         this.changePasswordController = changePasswordController;
     }
 
-    public void setNewsController(NewsController newsController) {
-        this.newsController = newsController;
-    }
-
     public void setLogoutController(LogoutController logoutController) {
         // TODO: save the logout controller in the instance variable.
+    }
+
+    public void setNewsNavigation(ViewManagerModel viewManagerModel, String newsViewName) {
+        this.viewManagerModel = viewManagerModel;
+        this.newsViewName = newsViewName;
     }
 }
