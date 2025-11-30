@@ -160,7 +160,12 @@ public class FilterSearchView extends JPanel implements PropertyChangeListener {
 
                 this.add(mainPanel, BorderLayout.CENTER);
             } catch (Exception exc) {
-                this.add(new JLabel("Error while loading stocks!"));
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Error while loading stocks: " + exc.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
             }
 
 
