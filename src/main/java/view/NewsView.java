@@ -19,6 +19,8 @@ import javax.swing.JTextArea;
 
 public class NewsView extends JPanel implements PropertyChangeListener {
 
+    private final String viewName = "news";
+
     private final NewsController controller;
     private final NewsViewModel viewModel;
 
@@ -268,5 +270,9 @@ public class NewsView extends JPanel implements PropertyChangeListener {
 
             return this;
         }
+    }
+
+    public String getViewName(){
+        return this.viewName;
     }
 }
