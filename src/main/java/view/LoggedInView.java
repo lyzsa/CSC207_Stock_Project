@@ -216,7 +216,7 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
         this.viewManagerModel = viewManagerModel;
         this.historyViewName = historyViewName;
     }
-}
+
 
 
     public void setMarketStatusViewModel(MarketStatusViewModel viewModel) {

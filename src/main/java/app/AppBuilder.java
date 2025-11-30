@@ -79,11 +79,11 @@ public class AppBuilder {
 
     // DAO version using local file storage
     final FileUserDataAccessObject userDataAccessObject = new FileUserDataAccessObject("users.csv", userFactory);
-    final NewsDataAccessObject newsDataAccessObject = new NewsDataAccessObject("d4lpdgpr01qr851prp30d4lpdgpr01qr851prp3g");
     // DAO for earnings history
     final EarningsDataAccessInterface earningsDataAccessObject =
             new FinnhubEarningsDataAccessObject();
-
+    final FilterSearchDataAccessInterface filterSearchDataAccessObject =
+            new FilterSearchDataAccessObject(apiKey);
     final NewsDataAccessObject newsDataAccessObject = new NewsDataAccessObject(apiKey);
     final MarketStatusDataAccessInterface marketStatusDataAccessObject =
             new MarketStatusDataAccessObject(apiKey);

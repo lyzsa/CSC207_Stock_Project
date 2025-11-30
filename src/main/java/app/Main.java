@@ -20,7 +20,7 @@ public class Main {
                 .addLoginUseCase()
                 .addChangePasswordUseCase()
                 .addNewsUsecase()
-                .addEarningsHistoryUsecase()
+                .addEarningsHistoryUseCase()
                 .addMarketStatusUseCase()
                 .build();
 
