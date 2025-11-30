@@ -37,21 +37,25 @@ public class FilterSearchDataAccessObject implements FilterSearchDataAccessInter
         }
         StringBuilder urlBuilder = new StringBuilder(BASE_URL)
                 .append("/stock")
-                .append("/symbol?exchange=").append(exchange);
+                .append("/symbol?exchange=")
+                .append(URLEncoder.encode(exchange, StandardCharsets.UTF_8));
 
         if (mic != null && !mic.isBlank()) {
-            urlBuilder.append("&mic=").append(mic);
+            urlBuilder.append("&mic=")
+                    .append(URLEncoder.encode(mic, StandardCharsets.UTF_8));
         }
 
         if (securityType != null && !securityType.isBlank()) {
-            urlBuilder.append("&type=").append(securityType);
+            urlBuilder.append("&securityType=")
+                    .append(URLEncoder.encode(securityType, StandardCharsets.UTF_8));
         }
 
         if (currency != null && !currency.isBlank()) {
-            urlBuilder.append("&currency=").append(currency);
+            urlBuilder.append("&currency=")
+                    .append(URLEncoder.encode(currency, StandardCharsets.UTF_8));
         }
 
-        urlBuilder.append("&token=").append(apiKey);
+        urlBuilder.append("&token=").append(URLEncoder.encode(apiKey, StandardCharsets.UTF_8));
 
         JSONArray array = fetchJsonArray(urlBuilder.toString());
         return parseStockArray(array);

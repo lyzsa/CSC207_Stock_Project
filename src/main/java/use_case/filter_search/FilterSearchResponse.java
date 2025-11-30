@@ -5,13 +5,15 @@ import entity.Stock;
 import java.util.List;
 
 public class FilterSearchResponse {
-    private final List<Stock> result;
+    private final List<Stock> stocks;
 
-    public FilterSearchResponse(List<Stock> result) {
-        this.result = result;
+    public FilterSearchResponse(List<Stock> stocks) {
+        System.out.println("RESPONSE ctor: incoming stocks = " +
+                (stocks == null ? "null" : stocks.size()));
+        this.stocks = stocks;
     }
 
     public List<Stock> getStocks() {
-        return this.result;
+        return stocks;
     }
 }
