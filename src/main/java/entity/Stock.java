@@ -44,4 +44,8 @@ public class Stock {
     public String getFigi() {
         return figi;
     }
+
+    public String getSymbol() {
+        return symbol;
+    }
 }

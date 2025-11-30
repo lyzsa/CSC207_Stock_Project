@@ -9,14 +9,7 @@ public interface FilterSearchInputBoundary {
      * Executes the filter search use case.
      * @param request the input data
      */
-    public final String[] EXCHANGE_OPTIONS = {"AD",
-            "AS", "AT", "AX", "BA", "BC", "BD", "BE", "BH", "BK", "BO", "BR",
-            "CA", "CN", "CO", "CR", "CS", "DB", "DE", "DU", "F", "HE", "HK",
-            "HM", "IC", "IR", "IS", "JK", "JO", "KL", "KQ", "KS", "KW", "L",
-            "LS", "MC", "ME", "MI", "MT", "MU", "MX", "NE", "NL", "NS", "NZ",
-            "OL", "OM", "PA", "PM", "PR", "QA", "RO", "RG", "SA", "SG", "SI",
-            "SN", "SR", "SS", "ST", "SW", "SZ", "T", "TA", "TL", "TO", "TW",
-            "TWO", "US", "V", "VI", "VN", "VS", "WA", "HA", "SX", "TG", "SC"};
+    public final String[] EXCHANGE_OPTIONS = {"US"};
 
     public final String[] MIC_OPTIONS = {null, "XADS", "XAMS", "ASEX", "XASX", "XBUE", "XBOG", "XBUD", "XBER", "XBAH", "XBKK",
             "XBOM", "XBRU", "XCAI", "XCNQ", "XCSE", "BVCA", "XCAS", "XDFM", "XETR", "XDUS", "XFRA", "XHEL", "XHKG",

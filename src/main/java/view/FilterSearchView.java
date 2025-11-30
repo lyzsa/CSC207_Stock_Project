@@ -1,5 +1,6 @@
 package view;
 
+import data_access.FilterSearchDataAccessObject;
 import entity.Stock;
 import interface_adapter.filter_search.FilterSearchController;
 import interface_adapter.filter_search.FilterSearchState;
@@ -12,6 +13,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The View for when the user is in the Filter Search Page.
@@ -93,7 +96,7 @@ public class FilterSearchView extends JPanel implements PropertyChangeListener {
 
         String[] columnNames = {"Symbol", "Description", "Currency", "Display Symbol", "FIGI", "MIC", "Security Type"};
 
-
+        // Home Button
         backToHomeButton.addActionListener(e -> {
             // TODO: implement navigation back to the main/home view.
             // For now, you can leave this empty or show a message:
@@ -105,6 +108,8 @@ public class FilterSearchView extends JPanel implements PropertyChangeListener {
             );
         });
 
+
+        // Search Button
         search.addActionListener(e -> {
             String ex = exchangeDrop.getSelectedItem().toString();
             String mi = null;
@@ -119,10 +124,44 @@ public class FilterSearchView extends JPanel implements PropertyChangeListener {
             }
 
             if (currencyDrop.getSelectedItem() != null) {
-                curr =  currencyDrop.getSelectedItem().toString();
+                curr = currencyDrop.getSelectedItem().toString();
             }
 
-            filterSearchController.loadStocks(ex , mi, sec, curr);
+            filterSearchController.loadStocks(ex, mi, sec, curr);
+            data_access.FilterSearchDataAccessObject obj = new
+                    FilterSearchDataAccessObject("d4lpdgpr01qr851prp30d4lpdgpr01qr851prp3g");
+            List<Stock> res;
+            try {
+                res = obj.loadStocks(ex, mi, sec, curr);
+            } catch (Exception exc) {
+                throw new RuntimeException(exc);
+            }
+
+            Object[][] data = new Object[res.size()][7];
+
+            for (int i = 0; i < res.size(); i++) {
+                Object[] temp = new Object[7];
+                temp[0] = res.get(i).getSymbol();
+                temp[1] = res.get(i).getDescription();
+                temp[2] = res.get(i).getCurrency();
+                temp[3] = res.get(i).getDisplaySymbol();
+                temp[4] = res.get(i).getFigi();
+                temp[5] = res.get(i).getMic();
+                temp[6] = res.get(i).getType();
+
+
+                data[i] =  temp;
+            }
+
+            JTable table = new JTable(data, columnNames);
+            table.setPreferredScrollableViewportSize(new Dimension(100, 100));
+            table.setFillsViewportHeight(true);
+
+            JScrollPane scrollPane = new JScrollPane(table);
+
+            mainPanel.add(scrollPane, BorderLayout.CENTER);
+
+            this.add(mainPanel, BorderLayout.CENTER);
 
         });
 
