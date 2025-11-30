@@ -2,6 +2,7 @@ package app;
 
 import data_access.FileUserDataAccessObject;
 import data_access.FilterSearchDataAccessObject;
+import data_access.NewsDataAccessObject;
 import entity.UserFactory;
 import interface_adapter.ViewManagerModel;
 import interface_adapter.filter_search.FilterSearchController;
@@ -15,6 +16,9 @@ import interface_adapter.login.LoginPresenter;
 import interface_adapter.login.LoginViewModel;
 import interface_adapter.logout.LogoutController;
 import interface_adapter.logout.LogoutPresenter;
+import interface_adapter.news.NewsController;
+import interface_adapter.news.NewsPresenter;
+import interface_adapter.news.NewsViewModel;
 import interface_adapter.signup.SignupController;
 import interface_adapter.signup.SignupPresenter;
 import interface_adapter.signup.SignupViewModel;
@@ -31,6 +35,9 @@ import use_case.login.LoginOutputBoundary;
 import use_case.logout.LogoutInputBoundary;
 import use_case.logout.LogoutInteractor;
 import use_case.logout.LogoutOutputBoundary;
+import use_case.news.NewsInputBoundary;
+import use_case.news.NewsInteractor;
+import use_case.news.NewsOutputBoundary;
 import use_case.signup.SignupInputBoundary;
 import use_case.signup.SignupInteractor;
 import use_case.signup.SignupOutputBoundary;
@@ -51,6 +58,8 @@ public class AppBuilder {
 
     // DAO version using local file storage
     final FileUserDataAccessObject userDataAccessObject = new FileUserDataAccessObject("users.csv", userFactory);
+    final NewsDataAccessObject newsDataAccessObject = new NewsDataAccessObject("d4lpdgpr01qr851prp30d4lpdgpr01qr851prp3g");
+    final FilterSearchDataAccessObject filterSearchDataAccessObject = new FilterSearchDataAccessObject("d4lpdgpr01qr851prp30d4lpdgpr01qr851prp3g");
 
     // DAO version using a shared external database
     // final DBUserDataAccessObject userDataAccessObject = new DBUserDataAccessObject(userFactory);
@@ -63,6 +72,8 @@ public class AppBuilder {
     private LoginView loginView;
     private FilterSearchViewModel filterSearchViewModel;
     private FilterSearchView filterSearchView;
+    private NewsViewModel newsViewModel;
+    private NewsView newsView;
 
     public AppBuilder() {
         cardPanel.setLayout(cardLayout);
@@ -93,6 +104,17 @@ public class AppBuilder {
         filterSearchViewModel = new FilterSearchViewModel();
         filterSearchView = new FilterSearchView(filterSearchViewModel);
         cardPanel.add(filterSearchView, filterSearchView.getViewName());
+      return this;
+      
+    public AppBuilder addNewsView() {
+        newsViewModel = new NewsViewModel();
+        NewsOutputBoundary newsOutputBoundary = new NewsPresenter(newsViewModel);
+        NewsInputBoundary newsInputBoundary =
+                new NewsInteractor(newsDataAccessObject, newsOutputBoundary);
+        NewsController newsController = new NewsController(newsInputBoundary);
+
+        newsView = new NewsView(newsController, newsViewModel);
+        cardPanel.add(newsView, newsView.getViewName());
         return this;
     }
 
@@ -132,13 +154,19 @@ public class AppBuilder {
 
     public AppBuilder addFilterSearchUseCase() {
         final FilterSearchOutputBoundary filterSearchOutputBoundary = new FilterSearchPresenter(filterSearchViewModel);
-        String key = "d4lpdgpr01qr851prp30d4lpdgpr01qr851prp3g";
-        FilterSearchDataAccessInterface filterObject = new FilterSearchDataAccessObject(key);
         final FilterSearchInputBoundary filterSearchInteractor =
-                new FilterSearchInteractor( filterObject, filterSearchOutputBoundary);
+                new FilterSearchInteractor( filterSearchDataAccessObject, filterSearchOutputBoundary);
 
         FilterSearchController filterSearchController = new FilterSearchController(filterSearchInteractor);
         filterSearchView.setFilterSearchController(filterSearchController);
+      
+    public AppBuilder addNewsUsecase() {
+        // Logged-in page: News button → News view
+        loggedInView.setNewsNavigation(viewManagerModel, newsView.getViewName());
+
+        // News page: Back button → Logged-in view
+        newsView.setBackNavigation(viewManagerModel, loggedInView.getViewName());
+
         return this;
     }
 
@@ -159,7 +187,7 @@ public class AppBuilder {
     }
 
     public JFrame build() {
-        final JFrame application = new JFrame("User Login Example");
+        final JFrame application = new JFrame("Stock Application");
         application.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         application.add(cardPanel);

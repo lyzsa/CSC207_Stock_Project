@@ -4,6 +4,8 @@ import interface_adapter.logged_in.ChangePasswordController;
 import interface_adapter.logged_in.LoggedInState;
 import interface_adapter.logged_in.LoggedInViewModel;
 import interface_adapter.logout.LogoutController;
+import interface_adapter.news.NewsController;
+import interface_adapter.ViewManagerModel;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -24,6 +26,9 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
     private final JLabel passwordErrorField = new JLabel();
     private ChangePasswordController changePasswordController = null;
     private LogoutController logoutController;
+    private NewsController newsController;
+    private ViewManagerModel viewManagerModel;
+    private String newsViewName;
 
     private final JLabel username;
 
@@ -32,29 +37,74 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
     private final JTextField passwordInputField = new JTextField(15);
     private final JButton changePassword;
 
+    private final JTextField searchStockField = new JTextField(25);
+    private final JButton searchButton = new JButton("Search");
+    private final JTextArea stockInfoArea = new JTextArea();
+    private final JButton addToWatchlistButton = new JButton("Add to Watchlist");
+
     public LoggedInView(LoggedInViewModel loggedInViewModel) {
         this.loggedInViewModel = loggedInViewModel;
         this.loggedInViewModel.addPropertyChangeListener(this);
 
-        final JLabel title = new JLabel("Logged In Screen");
-        title.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        final LabelTextPanel passwordInfo = new LabelTextPanel(
-                new JLabel("Password"), passwordInputField);
-
-        final JLabel usernameInfo = new JLabel("Currently logged in: ");
         username = new JLabel();
 
-        final JPanel buttons = new JPanel();
         logOut = new JButton("Log Out");
-        buttons.add(logOut);
-
         changePassword = new JButton("Change Password");
-        buttons.add(changePassword);
 
         logOut.addActionListener(this);
 
-        this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        this.setLayout(new BorderLayout());
+
+        final JPanel topToolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
+
+        final JButton newsButton = new JButton("News");
+        newsButton.addActionListener(e -> {
+            System.out.println("News button clicked"); // debug
+            if (viewManagerModel != null && newsViewName != null) {
+                viewManagerModel.setState(newsViewName);
+                viewManagerModel.firePropertyChange();
+            }
+        });
+
+        final JButton filterSearchButton = new JButton("Filter Search");
+        final JButton historyButton = new JButton("History");
+        final JButton marketOpenButton = new JButton("Market Open");
+        final JButton accountButton = new JButton("Account");
+
+        topToolbar.add(newsButton);
+        topToolbar.add(filterSearchButton);
+        topToolbar.add(historyButton);
+        topToolbar.add(marketOpenButton);
+        topToolbar.add(accountButton);
+
+        this.add(topToolbar, BorderLayout.NORTH);
+
+        final JPanel centerPanel = new JPanel();
+        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
+
+        final JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        final JLabel searchLabel = new JLabel("Search Stock:");
+        searchPanel.add(searchLabel);
+        searchPanel.add(searchStockField);
+        searchPanel.add(searchButton);
+
+        centerPanel.add(searchPanel);
+
+        stockInfoArea.setLineWrap(true);
+        stockInfoArea.setWrapStyleWord(true);
+
+        final JPanel stockInfoPanel = new JPanel(new BorderLayout());
+        stockInfoPanel.setBorder(BorderFactory.createTitledBorder("Stock Information"));
+        stockInfoPanel.add(new JScrollPane(stockInfoArea), BorderLayout.CENTER);
+
+        centerPanel.add(stockInfoPanel);
+
+        this.add(centerPanel, BorderLayout.CENTER);
+
+        final JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.add(addToWatchlistButton, BorderLayout.CENTER);
+
+        this.add(bottomPanel, BorderLayout.SOUTH);
 
         passwordInputField.getDocument().addDocumentListener(new DocumentListener() {
 
@@ -94,13 +144,6 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
                 }
         );
 
-        this.add(title);
-        this.add(usernameInfo);
-        this.add(username);
-
-        this.add(passwordInfo);
-        this.add(passwordErrorField);
-        this.add(buttons);
     }
 
     /**
@@ -141,5 +184,10 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
 
     public void setLogoutController(LogoutController logoutController) {
         // TODO: save the logout controller in the instance variable.
+    }
+
+    public void setNewsNavigation(ViewManagerModel viewManagerModel, String newsViewName) {
+        this.viewManagerModel = viewManagerModel;
+        this.newsViewName = newsViewName;
     }
 }

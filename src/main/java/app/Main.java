@@ -14,6 +14,11 @@ public class Main {
                 .addLoginUseCase()
                 .addChangePasswordUseCase()
                 .addFilterSearchUseCase()
+                .addNewsView()
+                .addSignupUseCase()
+                .addLoginUseCase()
+                .addChangePasswordUseCase()
+                .addNewsUsecase()
                 .build();
 
         application.pack();
