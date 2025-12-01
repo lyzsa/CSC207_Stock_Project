@@ -30,6 +30,7 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
     private NewsController newsController;
     private ViewManagerModel viewManagerModel;
     private String newsViewName;
+    private String filterSearchViewName;
     private String historyViewName;
     private JLabel marketStatusLabel;
     private MarketStatusViewModel marketStatusViewModel;
@@ -72,6 +73,16 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
         });
 
         final JButton filterSearchButton = new JButton("Filter Search");
+        filterSearchButton.addActionListener(e -> {
+            System.out.println("Filter Search button clicked"); // debug
+            if (viewManagerModel != null && newsViewName != null) {
+                viewManagerModel.setState(filterSearchViewName);
+                viewManagerModel.firePropertyChange();
+            }
+        });
+
+
+        final JButton historyButton = new JButton("History");
         historyButton = new JButton("History");
         historyButton.addActionListener(e -> {
             if (viewManagerModel != null && historyViewName != null) {
@@ -209,6 +220,11 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
     public void setNewsNavigation(ViewManagerModel viewManagerModel, String newsViewName) {
         this.viewManagerModel = viewManagerModel;
         this.newsViewName = newsViewName;
+    }
+
+    public void setFilterSearchNavigation(ViewManagerModel viewManagerModel, String filterSearchViewName) {
+        this.viewManagerModel = viewManagerModel;
+        this.filterSearchViewName = filterSearchViewName;
     }
 
     public void setHistoryNavigation(ViewManagerModel viewManagerModel,
