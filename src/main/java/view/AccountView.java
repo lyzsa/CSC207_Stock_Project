@@ -54,14 +54,12 @@ public class AccountView extends JPanel implements PropertyChangeListener {
     }
 
     public void propertyChange(PropertyChangeEvent evt) {
-        // Update username label
+
         String username = viewModel.getState().getUsername();
         usernameLabel.setText("Username: " + username);
 
-        // Clear previous watchlist items
         watchlistPanel.removeAll();
 
-        // Get the watchlist safely
         ArrayList<JSONObject> watchlist = viewModel.getState().getWatchlist();
         if (watchlist == null) {
             watchlist = new ArrayList<>();
