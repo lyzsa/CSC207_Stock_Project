@@ -1,5 +1,6 @@
 package view;
 
+import interface_adapter.account.AccountController;
 import interface_adapter.logged_in.ChangePasswordController;
 import interface_adapter.logged_in.LoggedInState;
 import interface_adapter.logged_in.LoggedInViewModel;
@@ -9,6 +10,7 @@ import interface_adapter.logout.LogoutController;
 import interface_adapter.news.NewsController;
 import interface_adapter.ViewManagerModel;
 import interface_adapter.market_status.MarketStatusViewModel;
+import org.json.JSONObject;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -30,10 +32,12 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
     private ChangePasswordController changePasswordController = null;
     private LogoutController logoutController;
     private NewsController newsController;
+    private AccountController accountController;
     private ViewManagerModel viewManagerModel;
     private String newsViewName;
     private String filterSearchViewName;
     private String historyViewName;
+    private String accountViewName;
     private String realtimeTradeViewName;
     private JLabel marketStatusLabel;
     private MarketStatusViewModel marketStatusViewModel;
@@ -47,11 +51,11 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
 
     private final JTextField passwordInputField = new JTextField(15);
     private final JButton changePassword;
+
     private final JTextField searchStockField = new JTextField(25);
     private final JButton searchButton = new JButton("Search");
     private final JTextArea stockInfoArea = new JTextArea();
     private final JButton addToWatchlistButton = new JButton("Add to Watchlist");
-    final JButton historyButton = new JButton("History");
 
     public LoggedInView(LoggedInViewModel loggedInViewModel) {
         this.loggedInViewModel = loggedInViewModel;
@@ -95,30 +99,20 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
             }
         });
 
-        final JButton realtimeTradeButton = new JButton("Realtime Trade");
-        realtimeTradeButton.addActionListener(e -> {
-            System.out.println("Realtime Trade button clicked"); // debug
-            System.out.println("viewManagerModel: " + viewManagerModel); // debug
-            System.out.println("realtimeTradeViewName: " + realtimeTradeViewName); // debug
-            if (viewManagerModel != null && realtimeTradeViewName != null) {
-                viewManagerModel.setState(realtimeTradeViewName);
+
+        final JButton accountButton = new JButton("Account");
+        accountButton.addActionListener(e -> {
+            System.out.println("Account button clicked");
+            if (viewManagerModel != null && accountViewName != null) {
+                viewManagerModel.setState(accountViewName);
                 viewManagerModel.firePropertyChange();
-            } else {
-                System.out.println("ERROR: Cannot navigate - viewManagerModel or realtimeTradeViewName is null"); // debug
             }
         });
-
-        final JButton marketOpenButton = new JButton("Market Open");
-        final JButton accountButton = new JButton("Account");
 
         topToolbar.add(newsButton);
         topToolbar.add(filterSearchButton);
         topToolbar.add(historyButton);
-        topToolbar.add(realtimeTradeButton);
-        topToolbar.add(marketOpenButton);
         topToolbar.add(accountButton);
-
-        this.add(topToolbar, BorderLayout.NORTH);
 
         marketStatusLabel = new JLabel("Loading market status...");
         marketStatusLabel.setFont(marketStatusLabel.getFont().deriveFont(Font.PLAIN, 11f));
@@ -126,6 +120,7 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
 
         topToolbar.add(Box.createHorizontalStrut(20));
         topToolbar.add(marketStatusLabel);
+        this.add(topToolbar, BorderLayout.NORTH);
 
         final JPanel centerPanel = new JPanel();
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
@@ -157,6 +152,17 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
 
         final JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.add(addToWatchlistButton, BorderLayout.CENTER);
+
+        addToWatchlistButton.addActionListener(e -> {
+            String username = loggedInViewModel.getState().getUsername();
+            System.out.println("watchlist button clicked");
+            if (accountController != null) {
+                JSONObject newItem = new JSONObject();
+//                newItem.put("stock", stockSymbol);
+                newItem.put("info", stockInfoArea.getText());
+                accountController.addToWatchlist(username, newItem);
+            }
+        });
 
         this.add(bottomPanel, BorderLayout.SOUTH);
 
@@ -259,6 +265,10 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
         });
     }
 
+    public void setAccountController(AccountController accountController) {
+        this.accountController = accountController;
+    }
+
     public void setLogoutController(LogoutController logoutController) {
         // TODO: save the logout controller in the instance variable.
     }
@@ -279,11 +289,14 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
         this.historyViewName = historyViewName;
     }
 
-    public void setRealtimeTradeNavigation(ViewManagerModel viewManagerModel,
-                                           String tradeViewName) {
+
+
+    public void setAccountNavigation(ViewManagerModel viewManagerModel,
+                                     String accountViewName) {
         this.viewManagerModel = viewManagerModel;
-        this.realtimeTradeViewName = tradeViewName;
+        this.accountViewName = accountViewName;
     }
+
 
     public void setMarketStatusViewModel(MarketStatusViewModel viewModel) {
         this.marketStatusViewModel = viewModel;

@@ -94,8 +94,8 @@ public class FilterSearchView extends JPanel implements PropertyChangeListener {
 
         topPanel.add(filtersPanel, BorderLayout.CENTER);
 
-        String[] columnNames = {"Symbol", "Description", "Currency",
-                "Display Symbol", "FIGI", "MIC", "Security Type"};
+        String[] columnNames = {"MIC", "Description", "Currency",
+                "Display Symbol", "FIGI", "Symbol", "Security Type"};
 
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override

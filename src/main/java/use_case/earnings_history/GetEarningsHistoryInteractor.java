@@ -28,7 +28,7 @@ public class GetEarningsHistoryInteractor implements GetEarningsHistoryInputBoun
         symbol = symbol.trim().toUpperCase();
 
         try {
-            // IMPORTANT: method name matches the interface
+            // method name matches the interface
             List<EarningsRecord> records = dataAccess.getEarningsFor(symbol);
 
             if (records == null) {

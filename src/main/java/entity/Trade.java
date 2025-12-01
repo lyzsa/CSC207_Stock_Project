@@ -2,11 +2,7 @@ package entity;
 
 import java.time.Instant;
 
-/**
- * Domain model representing a single trade tick.
- */
 public class Trade {
-
     private final String symbol;
     private final double price;
     private final double volume;
