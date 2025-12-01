@@ -12,12 +12,16 @@ import view.EarningsHistoryView;
 
 import data_access.FileUserDataAccessObject;
 import data_access.FilterSearchDataAccessObject;
+import data_access.stock_search.FinnhubStockSearchDataAccessObject;
 import data_access.NewsDataAccessObject;
 import entity.UserFactory;
 import interface_adapter.ViewManagerModel;
 import interface_adapter.filter_search.FilterSearchController;
 import interface_adapter.filter_search.FilterSearchPresenter;
 import interface_adapter.filter_search.FilterSearchViewModel;
+import interface_adapter.stock_search.StockSearchController;
+import interface_adapter.stock_search.StockSearchPresenter;
+import interface_adapter.stock_search.StockSearchViewModel;
 import interface_adapter.logged_in.ChangePasswordController;
 import interface_adapter.logged_in.ChangePasswordPresenter;
 import interface_adapter.logged_in.LoggedInViewModel;
@@ -39,6 +43,10 @@ import use_case.filter_search.FilterSearchDataAccessInterface;
 import use_case.filter_search.FilterSearchInputBoundary;
 import use_case.filter_search.FilterSearchInteractor;
 import use_case.filter_search.FilterSearchOutputBoundary;
+import use_case.stock_search.StockSearchDataAccessInterface;
+import use_case.stock_search.StockSearchInputBoundary;
+import use_case.stock_search.StockSearchInteractor;
+import use_case.stock_search.StockSearchOutputBoundary;
 import use_case.login.LoginInputBoundary;
 import use_case.login.LoginInteractor;
 import use_case.login.LoginOutputBoundary;
@@ -84,6 +92,8 @@ public class AppBuilder {
             new FinnhubEarningsDataAccessObject();
     final FilterSearchDataAccessInterface filterSearchDataAccessObject =
             new FilterSearchDataAccessObject(apiKey);
+    final StockSearchDataAccessInterface stockSearchDataAccessObject =
+            new FinnhubStockSearchDataAccessObject(apiKey);
     final NewsDataAccessObject newsDataAccessObject = new NewsDataAccessObject(apiKey);
     final MarketStatusDataAccessInterface marketStatusDataAccessObject =
             new MarketStatusDataAccessObject(apiKey);
@@ -99,6 +109,8 @@ public class AppBuilder {
     private LoginView loginView;
     private FilterSearchViewModel filterSearchViewModel;
     private FilterSearchView filterSearchView;
+    private StockSearchViewModel stockSearchViewModel;
+    private StockSearchController stockSearchController;
     private NewsViewModel newsViewModel;
     private NewsView newsView;
     private EarningsHistoryViewModel earningsHistoryViewModel;
@@ -138,7 +150,7 @@ public class AppBuilder {
         cardPanel.add(filterSearchView, filterSearchView.getViewName());
         return this;
     }
-      
+
     public AppBuilder addNewsView() {
         newsViewModel = new NewsViewModel();
         NewsOutputBoundary newsOutputBoundary = new NewsPresenter(newsViewModel);
@@ -218,7 +230,18 @@ public class AppBuilder {
         filterSearchView.setBackNavigation(viewManagerModel, loggedInView.getViewName());
         return this;
     }
-      
+    public AppBuilder addStockSearchUseCase() {
+        stockSearchViewModel = new StockSearchViewModel();
+        StockSearchOutputBoundary outputBoundary = new StockSearchPresenter(stockSearchViewModel);
+        StockSearchInputBoundary interactor =
+                new StockSearchInteractor(stockSearchDataAccessObject, outputBoundary);
+
+        stockSearchController = new StockSearchController(interactor, stockSearchViewModel);
+        loggedInView.setStockSearchController(stockSearchController);
+        loggedInView.setStockSearchViewModel(stockSearchViewModel);
+        return this;
+    }
+
     public AppBuilder addNewsUsecase() {
         // Logged-in page: News button → News view
         loggedInView.setNewsNavigation(viewManagerModel, newsView.getViewName());

@@ -16,6 +16,7 @@ public class Main {
                 .addFilterSearchUseCase()
                 .addNewsView()
                 .addEarningsHistoryView()
+                .addStockSearchUseCase()
                 .addSignupUseCase()
                 .addLoginUseCase()
                 .addChangePasswordUseCase()
