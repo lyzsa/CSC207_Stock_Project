@@ -1,4 +1,5 @@
 package use_case.stock_search;
 
-public class StockSearchInputBoundary {
+public interface StockSearchInputBoundary {
+    void execute(StockSearchRequestModel requestModel);
 }
