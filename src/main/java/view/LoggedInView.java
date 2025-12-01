@@ -1,5 +1,6 @@
 package view;
 
+import interface_adapter.account.AccountController;
 import interface_adapter.logged_in.ChangePasswordController;
 import interface_adapter.logged_in.LoggedInState;
 import interface_adapter.logged_in.LoggedInViewModel;
@@ -9,6 +10,7 @@ import interface_adapter.logout.LogoutController;
 import interface_adapter.news.NewsController;
 import interface_adapter.ViewManagerModel;
 import interface_adapter.market_status.MarketStatusViewModel;
+import org.json.JSONObject;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -30,10 +32,13 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
     private ChangePasswordController changePasswordController = null;
     private LogoutController logoutController;
     private NewsController newsController;
+    private AccountController accountController;
     private ViewManagerModel viewManagerModel;
     private String newsViewName;
     private String filterSearchViewName;
     private String historyViewName;
+    private String accountViewName;
+    private String realtimeTradeViewName;
     private JLabel marketStatusLabel;
     private MarketStatusViewModel marketStatusViewModel;
 
@@ -94,8 +99,15 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
             }
         });
 
- 
+
         final JButton accountButton = new JButton("Account");
+        accountButton.addActionListener(e -> {
+            System.out.println("Account button clicked");
+            if (viewManagerModel != null && accountViewName != null) {
+                viewManagerModel.setState(accountViewName);
+                viewManagerModel.firePropertyChange();
+            }
+        });
 
         topToolbar.add(newsButton);
         topToolbar.add(filterSearchButton);
@@ -140,6 +152,17 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
 
         final JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.add(addToWatchlistButton, BorderLayout.CENTER);
+
+        addToWatchlistButton.addActionListener(e -> {
+            String username = loggedInViewModel.getState().getUsername();
+            System.out.println("watchlist button clicked");
+            if (accountController != null) {
+                JSONObject newItem = new JSONObject();
+//                newItem.put("stock", stockSymbol);
+                newItem.put("info", stockInfoArea.getText());
+                accountController.addToWatchlist(username, newItem);
+            }
+        });
 
         this.add(bottomPanel, BorderLayout.SOUTH);
 
@@ -242,6 +265,10 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
         });
     }
 
+    public void setAccountController(AccountController accountController) {
+        this.accountController = accountController;
+    }
+
     public void setLogoutController(LogoutController logoutController) {
         // TODO: save the logout controller in the instance variable.
     }
@@ -262,6 +289,13 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
         this.historyViewName = historyViewName;
     }
 
+
+
+    public void setAccountNavigation(ViewManagerModel viewManagerModel,
+                                     String accountViewName) {
+        this.viewManagerModel = viewManagerModel;
+        this.accountViewName = accountViewName;
+    }
 
 
     public void setMarketStatusViewModel(MarketStatusViewModel viewModel) {

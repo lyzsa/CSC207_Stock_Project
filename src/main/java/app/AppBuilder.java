@@ -1,6 +1,9 @@
 package app;
 
 import data_access.FinnhubEarningsDataAccessObject;
+import interface_adapter.account.AccountController;
+import interface_adapter.account.AccountPresenter;
+import interface_adapter.account.AccountViewModel;
 import interface_adapter.earnings_history.EarningsHistoryController;
 import interface_adapter.earnings_history.EarningsHistoryPresenter;
 import interface_adapter.earnings_history.EarningsHistoryViewModel;
@@ -8,6 +11,10 @@ import use_case.earnings_history.EarningsDataAccessInterface;
 import use_case.earnings_history.GetEarningsHistoryInputBoundary;
 import use_case.earnings_history.GetEarningsHistoryInteractor;
 import use_case.earnings_history.GetEarningsHistoryOutputBoundary;
+import use_case.watchlist.WatchlistInputBoundary;
+import use_case.watchlist.WatchlistInteractor;
+import use_case.watchlist.WatchlistOutputBoundary;
+import use_case.watchlist.WatchlistUserDataAccessInterface;
 import view.EarningsHistoryView;
 
 import data_access.FileUserDataAccessObject;
@@ -90,6 +97,7 @@ public class AppBuilder {
     // DAO for earnings history
     final EarningsDataAccessInterface earningsDataAccessObject =
             new FinnhubEarningsDataAccessObject();
+    final WatchlistUserDataAccessInterface watchlistDataAccessObject = userDataAccessObject;
     final FilterSearchDataAccessInterface filterSearchDataAccessObject =
             new FilterSearchDataAccessObject(apiKey);
     final StockSearchDataAccessInterface stockSearchDataAccessObject =
@@ -115,6 +123,8 @@ public class AppBuilder {
     private NewsView newsView;
     private EarningsHistoryViewModel earningsHistoryViewModel;
     private EarningsHistoryView earningsHistoryView;
+    private AccountView accountView;
+    private AccountViewModel accountViewModel;
 
     private MarketStatusViewModel marketStatusViewModel;
     private MarketStatusController marketStatusController;
@@ -258,6 +268,36 @@ public class AppBuilder {
 
         // Earnings history page: Back button → Logged-in view
         earningsHistoryView.setBackNavigation(
+                viewManagerModel, loggedInView.getViewName());
+
+        return this;
+    }
+
+    public AppBuilder addAccount() {
+        accountViewModel = new AccountViewModel();
+        WatchlistOutputBoundary watchlistPresenter =
+                new AccountPresenter(accountViewModel);
+        WatchlistInputBoundary watchlistInteractor =
+                new WatchlistInteractor(watchlistDataAccessObject, watchlistPresenter);
+        AccountController accountController = new AccountController(watchlistInteractor);
+
+        accountView = new AccountView(accountViewModel);
+        accountView.setController(accountController);
+        cardPanel.add(accountView, accountView.getViewName());
+        loggedInView.setAccountController(accountController);
+
+        // Logged in page: Account button → Account view
+        loggedInView.setAccountNavigation(
+                viewManagerModel, accountView.getViewName());
+        viewManagerModel.addPropertyChangeListener(evt -> {
+            if (viewManagerModel.getState().equals(accountView.getViewName())) {
+                String username = userDataAccessObject.getCurrentUsername();
+                accountView.loadAccount(username);
+            }
+        });
+
+        // Account page: Back button → Logged-in view
+        accountView.setBackNavigation(
                 viewManagerModel, loggedInView.getViewName());
 
         return this;
