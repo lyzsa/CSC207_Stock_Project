@@ -9,9 +9,9 @@ public interface FilterSearchInputBoundary {
      * Executes the filter search use case.
      * @param request the input data
      */
-    public final String[] EXCHANGE_OPTIONS = {"US"};
+    String[] EXCHANGE_OPTIONS = {"US"};
 
-    public final String[] MIC_OPTIONS = {null, "XADS", "XAMS", "ASEX", "XASX", "XBUE", "XBOG", "XBUD", "XBER", "XBAH", "XBKK",
+    String[] MIC_OPTIONS = {null, "XADS", "XAMS", "ASEX", "XASX", "XBUE", "XBOG", "XBUD", "XBER", "XBAH", "XBKK",
             "XBOM", "XBRU", "XCAI", "XCNQ", "XCSE", "BVCA", "XCAS", "XDFM", "XETR", "XDUS", "XFRA", "XHEL", "XHKG",
             "XHAM", "XICE", "XDUB", "XIST", "XIDX", "XJSE", "XKLS", "XKOS", "XKRX", "XKUW", "XLON", "XLIS", "XMAD",
             "MISX", "XMIL", "XMAL", "XMUN", "XMEX", "NEOE", "XNSA", "XNSE", "XNZE", "XOSL", "XMUS", "XPAR", "XPHS",
@@ -20,7 +20,7 @@ public interface FilterSearchInputBoundary {
             "XNYS", "XGAT", "XASE", "BATS", "ARCX", "XNMS", "XNCM", "XNGS", "IEXG", "XNAS", "OTCM", "OOTC", "XSTC",
             "XHNX", "FNIS", "FNDK", "NFI"};
 
-    final String[] SECURITY_OPTIONS = {null, "ABS Auto", "ABS Card", "ABS Home", "ABS Other", "ACCEPT BANCARIA",
+    String[] SECURITY_OPTIONS = {null, "ABS Auto", "ABS Card", "ABS Home", "ABS Other", "ACCEPT BANCARIA",
             "ADJ CONV. TO FIXED", "ADJ CONV. TO FIXED, OID", "ADJUSTABLE", "ADJUSTABLE, OID", "ADR", "Agncy ABS Home",
             "Agncy ABS Other", "Agncy CMBS", "Agncy CMO FLT", "Agncy CMO INV", "Agncy CMO IO", "Agncy CMO Other",
             "Agncy CMO PO", "Agncy CMO Z", "Asset-Based", "ASSET-BASED BRIDGE", "ASSET-BASED BRIDGE REV",
