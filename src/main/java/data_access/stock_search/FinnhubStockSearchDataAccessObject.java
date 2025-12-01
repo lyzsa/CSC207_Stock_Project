@@ -1,9 +1,9 @@
 package data_access.stock_search;
 
-import data_access.*;
 import entity.StockQuote;
-import use_case.stock_search.StockSearchDataAccessInterface;
+import org.json.JSONArray;
 import org.json.JSONObject;
+import use_case.stock_search.StockSearchDataAccessInterface;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,7 +15,8 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 public class FinnhubStockSearchDataAccessObject implements StockSearchDataAccessInterface {
-    private static final String BASE_URL = "https://finnhub.io/api/v1/quote";
+    private static final String QUOTE_URL = "https://finnhub.io/api/v1/quote";
+    private static final String SEARCH_URL = "https://finnhub.io/api/v1/search";
 
     private final String apiKey;
 
@@ -24,19 +25,81 @@ public class FinnhubStockSearchDataAccessObject implements StockSearchDataAccess
     }
 
     @Override
-    public StockQuote loadQuote(String symbol) throws Exception {
-        if (symbol == null || symbol.isBlank()) {
-            throw new IllegalArgumentException("Symbol must not be empty.");
+    public StockQuote loadQuote(String userQuery) throws Exception {
+        if (userQuery == null || userQuery.isBlank()) {
+            throw new IllegalArgumentException("Symbol or name must not be empty.");
         }
 
-        StringBuilder urlBuilder = new StringBuilder(BASE_URL)
+        String query = userQuery.trim();
+
+        String resolvedSymbol = resolveSymbol(query);
+        if (resolvedSymbol == null || resolvedSymbol.isBlank()) {
+            throw new IllegalStateException("No matching symbol found for: " + query);
+        }
+
+        StringBuilder urlBuilder = new StringBuilder(QUOTE_URL)
                 .append("?symbol=")
-                .append(URLEncoder.encode(symbol, StandardCharsets.UTF_8))
+                .append(URLEncoder.encode(resolvedSymbol, StandardCharsets.UTF_8))
                 .append("&token=")
                 .append(URLEncoder.encode(apiKey, StandardCharsets.UTF_8));
 
         JSONObject json = fetchJsonObject(urlBuilder.toString());
-        return parseQuote(symbol, json);
+        return parseQuote(resolvedSymbol, json);
+    }
+
+    /**
+     * Resolve an arbitrary query (symbol, name, ISIN, CUSIP) to a concrete ticker symbol
+     * using Finnhub's /search endpoint.
+     */
+    private String resolveSymbol(String query) throws IOException {
+        StringBuilder urlBuilder = new StringBuilder(SEARCH_URL)
+                .append("?q=")
+                .append(URLEncoder.encode(query, StandardCharsets.UTF_8))
+                .append("&token=")
+                .append(URLEncoder.encode(apiKey, StandardCharsets.UTF_8));
+
+        JSONObject json = fetchJsonObject(urlBuilder.toString());
+        if (json == null) {
+            return null;
+        }
+
+        JSONArray results = json.optJSONArray("result");
+        if (results == null || results.length() == 0) {
+            return null;
+        }
+
+        // 1) Exact symbol match (case-insensitive)
+        for (int i = 0; i < results.length(); i++) {
+            JSONObject r = results.optJSONObject(i);
+            if (r == null) continue;
+            String sym = r.optString("symbol", "");
+            if (!sym.isEmpty() && sym.equalsIgnoreCase(query)) {
+                return sym;
+            }
+        }
+
+        String lowerQuery = query.toLowerCase();
+
+        // 2) Description contains query (case-insensitive)
+        for (int i = 0; i < results.length(); i++) {
+            JSONObject r = results.optJSONObject(i);
+            if (r == null) continue;
+            String desc = r.optString("description", "");
+            if (!desc.isEmpty() && desc.toLowerCase().contains(lowerQuery)) {
+                String sym = r.optString("symbol", "");
+                if (!sym.isEmpty()) {
+                    return sym;
+                }
+            }
+        }
+
+        // 3) Fallback to the first result's symbol
+        JSONObject first = results.optJSONObject(0);
+        if (first == null) {
+            return null;
+        }
+        String sym = first.optString("symbol", "");
+        return sym.isEmpty() ? null : sym;
     }
 
     private JSONObject fetchJsonObject(String urlString) throws IOException {
