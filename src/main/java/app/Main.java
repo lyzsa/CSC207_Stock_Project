@@ -16,6 +16,7 @@ public class Main {
                 .addFilterSearchUseCase()
                 .addNewsView()
                 .addEarningsHistoryView()
+                .addTradeView()
                 .addSignupUseCase()
                 .addLoginUseCase()
                 .addChangePasswordUseCase()
@@ -23,6 +24,7 @@ public class Main {
                 .addEarningsHistoryUseCase()
                 .addAccount()
                 .addMarketStatusUseCase()
+                .addRealtimeTradeUseCase()
                 .build();
 
         application.pack();
