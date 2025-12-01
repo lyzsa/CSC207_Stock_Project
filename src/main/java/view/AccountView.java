@@ -54,25 +54,37 @@ public class AccountView extends JPanel implements PropertyChangeListener {
     }
 
     public void propertyChange(PropertyChangeEvent evt) {
+        // Update username label
         String username = viewModel.getState().getUsername();
         usernameLabel.setText("Username: " + username);
 
+        // Clear previous watchlist items
         watchlistPanel.removeAll();
+
+        // Get the watchlist safely
         ArrayList<JSONObject> watchlist = viewModel.getState().getWatchlist();
         if (watchlist == null) {
             watchlist = new ArrayList<>();
-            for (JSONObject item : watchlist) {
-                JPanel itemPanel = new JPanel();
-                itemPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
-                itemPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-
-                JLabel stockLabel = new JLabel(item.getString("stock"));
-                itemPanel.add(stockLabel);
-
-                watchlistPanel.add(itemPanel);
-            }
         }
 
+        // Populate watchlist safely
+        for (JSONObject item : watchlist) {
+            JPanel itemPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            itemPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+
+            // Safely get the info text
+            String text = "Unknown";
+            if (item != null && item.has("info")) {
+                text = item.getString("info");
+            }
+
+            JLabel stockLabel = new JLabel(text);
+            itemPanel.add(stockLabel);
+
+            watchlistPanel.add(itemPanel);
+        }
+
+        // Refresh UI
         watchlistPanel.revalidate();
         watchlistPanel.repaint();
     }

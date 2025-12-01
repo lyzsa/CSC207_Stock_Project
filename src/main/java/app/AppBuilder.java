@@ -284,6 +284,7 @@ public class AppBuilder {
         accountView = new AccountView(accountViewModel);
         accountView.setController(accountController);
         cardPanel.add(accountView, accountView.getViewName());
+        loggedInView.setAccountController(accountController);
 
         // Logged in page: Account button → Account view
         loggedInView.setAccountNavigation(

@@ -10,6 +10,7 @@ import interface_adapter.logout.LogoutController;
 import interface_adapter.news.NewsController;
 import interface_adapter.ViewManagerModel;
 import interface_adapter.market_status.MarketStatusViewModel;
+import org.json.JSONObject;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -101,8 +102,8 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
 
         final JButton accountButton = new JButton("Account");
         accountButton.addActionListener(e -> {
-            System.out.println("Account button clicked"); // debug
-            if (viewManagerModel != null && newsViewName != null) {
+            System.out.println("Account button clicked");
+            if (viewManagerModel != null && accountViewName != null) {
                 viewManagerModel.setState(accountViewName);
                 viewManagerModel.firePropertyChange();
             }
@@ -152,13 +153,16 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
         final JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.add(addToWatchlistButton, BorderLayout.CENTER);
 
-//        addToWatchlistButton.addActionListener(e -> {
-//            if (accountController != null) {
-//
-//                JSONObject newItem = ...; // get stock info from somewhere
-//                accountController.addToWatchlist(username, newItem);
-//            }
-//        });
+        addToWatchlistButton.addActionListener(e -> {
+            String username = loggedInViewModel.getState().getUsername();
+            System.out.println("watchlist button clicked");
+            if (accountController != null) {
+                JSONObject newItem = new JSONObject();
+//                newItem.put("stock", stockSymbol);
+                newItem.put("info", stockInfoArea.getText());
+                accountController.addToWatchlist(username, newItem);
+            }
+        });
 
         this.add(bottomPanel, BorderLayout.SOUTH);
 
@@ -259,6 +263,10 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
                 stockInfoArea.setText("");
             }
         });
+    }
+
+    public void setAccountController(AccountController accountController) {
+        this.accountController = accountController;
     }
 
     public void setLogoutController(LogoutController logoutController) {
