@@ -12,12 +12,16 @@ import view.EarningsHistoryView;
 
 import data_access.FileUserDataAccessObject;
 import data_access.FilterSearchDataAccessObject;
+import data_access.stock_search.FinnhubStockSearchDataAccessObject;
 import data_access.NewsDataAccessObject;
 import entity.UserFactory;
 import interface_adapter.ViewManagerModel;
 import interface_adapter.filter_search.FilterSearchController;
 import interface_adapter.filter_search.FilterSearchPresenter;
 import interface_adapter.filter_search.FilterSearchViewModel;
+import interface_adapter.stock_search.StockSearchController;
+import interface_adapter.stock_search.StockSearchPresenter;
+import interface_adapter.stock_search.StockSearchViewModel;
 import interface_adapter.logged_in.ChangePasswordController;
 import interface_adapter.logged_in.ChangePasswordPresenter;
 import interface_adapter.logged_in.LoggedInViewModel;
@@ -39,6 +43,10 @@ import use_case.filter_search.FilterSearchDataAccessInterface;
 import use_case.filter_search.FilterSearchInputBoundary;
 import use_case.filter_search.FilterSearchInteractor;
 import use_case.filter_search.FilterSearchOutputBoundary;
+import use_case.stock_search.StockSearchDataAccessInterface;
+import use_case.stock_search.StockSearchInputBoundary;
+import use_case.stock_search.StockSearchInteractor;
+import use_case.stock_search.StockSearchOutputBoundary;
 import use_case.login.LoginInputBoundary;
 import use_case.login.LoginInteractor;
 import use_case.login.LoginOutputBoundary;
@@ -59,6 +67,8 @@ import use_case.market_status.MarketStatusInteractor;
 import use_case.market_status.MarketStatusOutputBoundary;
 import use_case.market_status.MarketStatusDataAccessInterface;
 import data_access.MarketStatusDataAccessObject;
+import data_access.FinnhubTradeDataAccessObject;
+import use_case.TradeFeed;
 import view.*;
 
 import javax.swing.*;
@@ -84,9 +94,12 @@ public class AppBuilder {
             new FinnhubEarningsDataAccessObject();
     final FilterSearchDataAccessInterface filterSearchDataAccessObject =
             new FilterSearchDataAccessObject(apiKey);
+    final StockSearchDataAccessInterface stockSearchDataAccessObject =
+            new FinnhubStockSearchDataAccessObject(apiKey);
     final NewsDataAccessObject newsDataAccessObject = new NewsDataAccessObject(apiKey);
     final MarketStatusDataAccessInterface marketStatusDataAccessObject =
             new MarketStatusDataAccessObject(apiKey);
+
 
     // DAO version using a shared external database
     // final DBUserDataAccessObject userDataAccessObject = new DBUserDataAccessObject(userFactory);
@@ -99,10 +112,13 @@ public class AppBuilder {
     private LoginView loginView;
     private FilterSearchViewModel filterSearchViewModel;
     private FilterSearchView filterSearchView;
+    private StockSearchViewModel stockSearchViewModel;
+    private StockSearchController stockSearchController;
     private NewsViewModel newsViewModel;
     private NewsView newsView;
     private EarningsHistoryViewModel earningsHistoryViewModel;
     private EarningsHistoryView earningsHistoryView;
+    private TradeView tradeView;
 
     private MarketStatusViewModel marketStatusViewModel;
     private MarketStatusController marketStatusController;
@@ -138,7 +154,7 @@ public class AppBuilder {
         cardPanel.add(filterSearchView, filterSearchView.getViewName());
         return this;
     }
-      
+
     public AppBuilder addNewsView() {
         newsViewModel = new NewsViewModel();
         NewsOutputBoundary newsOutputBoundary = new NewsPresenter(newsViewModel);
@@ -168,6 +184,15 @@ public class AppBuilder {
         earningsHistoryView = new EarningsHistoryView(controller, earningsHistoryViewModel);
 
         cardPanel.add(earningsHistoryView, earningsHistoryView.getViewName());
+        return this;
+    }
+
+    public AppBuilder addTradeView() {
+        TradeFeed tradeFeed = new FinnhubTradeDataAccessObject();
+        tradeView = new TradeView(tradeFeed);
+        String viewName = tradeView.getViewName();
+        System.out.println("Adding TradeView with name: " + viewName); // debug
+        cardPanel.add(tradeView, viewName);
         return this;
     }
 
@@ -213,9 +238,23 @@ public class AppBuilder {
 
         FilterSearchController filterSearchController = new FilterSearchController(filterSearchInteractor);
         filterSearchView.setFilterSearchController(filterSearchController);
+
+        loggedInView.setFilterSearchNavigation(viewManagerModel, filterSearchView.getViewName());
+        filterSearchView.setBackNavigation(viewManagerModel, loggedInView.getViewName());
         return this;
     }
-      
+    public AppBuilder addStockSearchUseCase() {
+        stockSearchViewModel = new StockSearchViewModel();
+        StockSearchOutputBoundary outputBoundary = new StockSearchPresenter(stockSearchViewModel);
+        StockSearchInputBoundary interactor =
+                new StockSearchInteractor(stockSearchDataAccessObject, outputBoundary);
+
+        stockSearchController = new StockSearchController(interactor, stockSearchViewModel);
+        loggedInView.setStockSearchController(stockSearchController);
+        loggedInView.setStockSearchViewModel(stockSearchViewModel);
+        return this;
+    }
+
     public AppBuilder addNewsUsecase() {
         // Logged-in page: News button → News view
         loggedInView.setNewsNavigation(viewManagerModel, newsView.getViewName());
@@ -261,6 +300,18 @@ public class AppBuilder {
         marketStatusController = new MarketStatusController(msInteractor);
         loggedInView.setMarketStatusViewModel(marketStatusViewModel);
         marketStatusController.updateStatus();
+        return this;
+    }
+
+    public AppBuilder addRealtimeTradeUseCase() {
+        // Logged-in page: Realtime Trade button → Trade view
+        String tradeViewName = tradeView.getViewName();
+        System.out.println("Setting up Realtime Trade navigation to view: " + tradeViewName); // debug
+        loggedInView.setRealtimeTradeNavigation(viewManagerModel, tradeViewName);
+
+        // Trade page: Back button → Logged-in view
+        tradeView.setBackNavigation(viewManagerModel, loggedInView.getViewName());
+
         return this;
     }
 

@@ -2,6 +2,7 @@ package view;
 
 import data_access.FilterSearchDataAccessObject;
 import entity.Stock;
+import interface_adapter.ViewManagerModel;
 import interface_adapter.filter_search.FilterSearchController;
 import interface_adapter.filter_search.FilterSearchState;
 import interface_adapter.filter_search.FilterSearchViewModel;
@@ -24,6 +25,9 @@ import java.util.List;
 public class FilterSearchView extends JPanel implements PropertyChangeListener {
     private FilterSearchController filterSearchController;
     private final FilterSearchViewModel filterSearchViewModel;
+
+    private ViewManagerModel viewManagerModel;
+    private String homeViewName;
 
     // Table-related fields
     private JTable table;
@@ -108,14 +112,10 @@ public class FilterSearchView extends JPanel implements PropertyChangeListener {
 
         // Home Button
         backToHomeButton.addActionListener(e -> {
-            // TODO: implement navigation back to the main/home view.
-            // For now, you can leave this empty or show a message:
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Back to Home is not implemented yet.",
-                    "Info",
-                    JOptionPane.INFORMATION_MESSAGE
-            );
+            if (viewManagerModel != null && homeViewName != null) {
+                viewManagerModel.setState(homeViewName);
+                viewManagerModel.firePropertyChange();
+            }
         });
 
         // Search Button
@@ -187,6 +187,10 @@ public class FilterSearchView extends JPanel implements PropertyChangeListener {
             }
         }
         System.out.println("TABLE rowCount = " + tableModel.getRowCount());
+    }
+    public void setBackNavigation(ViewManagerModel viewManagerModel, String homeViewName) {
+        this.viewManagerModel = viewManagerModel;
+        this.homeViewName = homeViewName;
     }
 }
 
