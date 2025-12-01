@@ -46,7 +46,6 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
     private final JButton searchButton = new JButton("Search");
     private final JTextArea stockInfoArea = new JTextArea();
     private final JButton addToWatchlistButton = new JButton("Add to Watchlist");
-    private final JButton historyButton;
 
     public LoggedInView(LoggedInViewModel loggedInViewModel) {
         this.loggedInViewModel = loggedInViewModel;
@@ -83,7 +82,6 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
 
 
         final JButton historyButton = new JButton("History");
-        historyButton = new JButton("History");
         historyButton.addActionListener(e -> {
             if (viewManagerModel != null && historyViewName != null) {
                 viewManagerModel.setState(historyViewName);

@@ -87,8 +87,6 @@ public class AppBuilder {
     final NewsDataAccessObject newsDataAccessObject = new NewsDataAccessObject(apiKey);
     final MarketStatusDataAccessInterface marketStatusDataAccessObject =
             new MarketStatusDataAccessObject(apiKey);
-    final FilterSearchDataAccessObject filterSearchDataAccessObject =
-            new FilterSearchDataAccessObject(apiKey);
 
     // DAO version using a shared external database
     // final DBUserDataAccessObject userDataAccessObject = new DBUserDataAccessObject(userFactory);
