@@ -30,7 +30,7 @@ public class AccountView extends JPanel implements PropertyChangeListener {
 
         JPanel topPanel = new JPanel(new BorderLayout());
         backButton = new JButton("Back");
-        topPanel.add(backButton, BorderLayout.EAST);
+        topPanel.add(backButton, BorderLayout.WEST);
 
         backButton.addActionListener(e -> {
             if (viewManagerModel != null && homeViewName != null) {
