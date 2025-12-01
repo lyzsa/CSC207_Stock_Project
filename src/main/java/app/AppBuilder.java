@@ -74,6 +74,14 @@ import use_case.market_status.MarketStatusInteractor;
 import use_case.market_status.MarketStatusOutputBoundary;
 import use_case.market_status.MarketStatusDataAccessInterface;
 import data_access.MarketStatusDataAccessObject;
+import data_access.FinnhubTradeDataAccessObject;
+import use_case.trade.TradeDataAccessInterface;
+import use_case.trade.TradeInputBoundary;
+import use_case.trade.TradeInteractor;
+import use_case.trade.TradeOutputBoundary;
+import interface_adapter.trade.TradeController;
+import interface_adapter.trade.TradePresenter;
+import interface_adapter.trade.TradeViewModel;
 import view.*;
 
 import javax.swing.*;
@@ -125,6 +133,8 @@ public class AppBuilder {
     private EarningsHistoryView earningsHistoryView;
     private AccountView accountView;
     private AccountViewModel accountViewModel;
+    private TradeView tradeView;
+    private TradeViewModel tradeViewModel;
 
     private MarketStatusViewModel marketStatusViewModel;
     private MarketStatusController marketStatusController;
@@ -193,6 +203,23 @@ public class AppBuilder {
         return this;
     }
 
+    public AppBuilder addTradeView() {
+        // ViewModel
+        tradeViewModel = new TradeViewModel();
+        
+        // Presenter + Interactor
+        TradeOutputBoundary tradeOutputBoundary = new TradePresenter(tradeViewModel);
+        TradeDataAccessInterface tradeDataAccess = new FinnhubTradeDataAccessObject();
+        TradeInputBoundary tradeInteractor = new TradeInteractor(tradeDataAccess, tradeOutputBoundary);
+        
+        // Controller
+        TradeController tradeController = new TradeController(tradeInteractor);
+        
+        // Swing view
+        tradeView = new TradeView(tradeController, tradeViewModel);
+        cardPanel.add(tradeView, tradeView.getViewName());
+        return this;
+    }
 
     public AppBuilder addSignupUseCase() {
         final SignupOutputBoundary signupOutputBoundary = new SignupPresenter(viewManagerModel,
@@ -329,6 +356,18 @@ public class AppBuilder {
         marketStatusController = new MarketStatusController(msInteractor);
         loggedInView.setMarketStatusViewModel(marketStatusViewModel);
         marketStatusController.updateStatus();
+        return this;
+    }
+
+    public AppBuilder addRealtimeTradeUseCase() {
+        // Logged-in page: Realtime Trade button → Trade view
+        String tradeViewName = tradeView.getViewName();
+        System.out.println("Setting up Realtime Trade navigation to view: " + tradeViewName); // debug
+        loggedInView.setRealtimeTradeNavigation(viewManagerModel, tradeViewName);
+
+        // Trade page: Back button → Logged-in view
+        tradeView.setBackNavigation(viewManagerModel, loggedInView.getViewName());
+
         return this;
     }
 
