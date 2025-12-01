@@ -213,6 +213,8 @@ public class AppBuilder {
 
         LoginController loginController = new LoginController(loginInteractor);
         loginView.setLoginController(loginController);
+
+        loginView.setBackNavigation(viewManagerModel, signupView.getViewName());
         return this;
     }
 
