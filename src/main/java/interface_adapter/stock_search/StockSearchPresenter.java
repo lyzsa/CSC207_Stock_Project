@@ -14,7 +14,34 @@ public class StockSearchPresenter implements StockSearchOutputBoundary {
     @Override
     public void prepareSuccessView(StockSearchResponseModel responseModel) {
         StringBuilder sb = new StringBuilder();
-        sb.append(responseModel.getSymbol()).append("\n");
+        String symbol = responseModel.getSymbol();
+        String name = responseModel.getCompanyName();
+        String exchange = responseModel.getExchange();
+        String industry = responseModel.getIndustry();
+        double marketCap = responseModel.getMarketCap();
+
+        if (name != null && !name.isBlank()) {
+            sb.append(symbol != null ? symbol : "");
+            sb.append(" - ");
+            sb.append(name);
+        } else {
+            sb.append(symbol != null ? symbol : "");
+        }
+
+        if (exchange != null && !exchange.isBlank()) {
+            sb.append(" (").append(exchange).append(")");
+        }
+        sb.append("\n");
+
+        if (industry != null && !industry.isBlank()) {
+            sb.append("Industry: ").append(industry).append("\n");
+        }
+
+        if (!Double.isNaN(marketCap) && marketCap > 0) {
+            sb.append("Market Cap: ").append(marketCap).append(" B").append("\n");
+        }
+
+        sb.append("\n");
         sb.append("Current: ").append(responseModel.getCurrentPrice()).append("\n");
         sb.append("Open:    ").append(responseModel.getOpen()).append("\n");
         sb.append("High:    ").append(responseModel.getHigh()).append("\n");
