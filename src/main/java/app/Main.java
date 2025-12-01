@@ -15,10 +15,12 @@ public class Main {
                 .addChangePasswordUseCase()
                 .addFilterSearchUseCase()
                 .addNewsView()
+                .addEarningsHistoryView()
                 .addSignupUseCase()
                 .addLoginUseCase()
                 .addChangePasswordUseCase()
                 .addNewsUsecase()
+                .addEarningsHistoryUseCase()
                 .addMarketStatusUseCase()
                 .build();
 

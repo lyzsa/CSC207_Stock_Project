@@ -4,6 +4,7 @@ import entity.EarningsRecord;
 import interface_adapter.earnings_history.EarningsHistoryController;
 import interface_adapter.earnings_history.EarningsHistoryState;
 import interface_adapter.earnings_history.EarningsHistoryViewModel;
+import interface_adapter.ViewManagerModel;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -14,11 +15,13 @@ import java.util.List;
 
 public class EarningsHistoryView extends JPanel implements PropertyChangeListener {
 
+    private final String viewName = "earnings history";
     private final EarningsHistoryController controller;
     private final EarningsHistoryViewModel viewModel;
 
     private final JTextField symbolField = new JTextField("", 25);
     private final JButton loadButton = new JButton("Load Earnings");
+    private final JButton backButton = new JButton("Back");
 
     private final DefaultTableModel tableModel = new DefaultTableModel(
             new Object[]{"Period", "Actual", "Estimate", "Surprise"}, 0
@@ -39,6 +42,7 @@ public class EarningsHistoryView extends JPanel implements PropertyChangeListene
         topPanel.add(new JLabel("Company Symbol:"));
         topPanel.add(symbolField);
         topPanel.add(loadButton);
+        topPanel.add(backButton);
         add(topPanel, BorderLayout.NORTH);
 
         table.setFillsViewportHeight(true);
@@ -49,6 +53,20 @@ public class EarningsHistoryView extends JPanel implements PropertyChangeListene
 
         loadButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
     }
+
+    public String getViewName() {
+        return viewName;
+    }
+
+    // AppBuilder calls this so the Back button knows where to go
+    public void setBackNavigation(ViewManagerModel viewManagerModel,
+                                  String loggedInViewName) {
+        backButton.addActionListener(e -> {
+            viewManagerModel.setState(loggedInViewName);
+            viewManagerModel.firePropertyChange();
+        });
+    }
+
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
