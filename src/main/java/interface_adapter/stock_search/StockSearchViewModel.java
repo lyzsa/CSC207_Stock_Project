@@ -1,27 +1,45 @@
 package interface_adapter.stock_search;
 
-import use_case.stock_search.StockSearchInputBoundary;
-import use_case.stock_search.StockSearchRequestModel;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 
-public class StockSearchController {
+public class StockSearchViewModel {
 
-    private final StockSearchInputBoundary interactor;
-    private final StockSearchViewModel viewModel;
+    private final PropertyChangeSupport support = new PropertyChangeSupport(this);
 
-    public StockSearchController(StockSearchInputBoundary interactor,
-                                 StockSearchViewModel viewModel) {
-        this.interactor = interactor;
-        this.viewModel = viewModel;
+    private String infoText;
+    private String errorMessage;
+    private boolean loading;
+
+    public void addPropertyChangeListener(PropertyChangeListener listener) {
+        support.addPropertyChangeListener(listener);
     }
 
-    public void search(String symbol) {
-        viewModel.setLoading(true);
-        viewModel.setErrorMessage(null);
-        viewModel.firePropertyChanged();
+    public void firePropertyChanged() {
+        support.firePropertyChange("state", null, this);
+    }
 
-        new Thread(() -> {
-            StockSearchRequestModel request = new StockSearchRequestModel(symbol);
-            interactor.execute(request);
-        }).start();
+    public String getInfoText() {
+        return infoText;
+    }
+
+    public void setInfoText(String infoText) {
+        this.infoText = infoText;
+    }
+
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
+    }
+
+    public boolean isLoading() {
+        return loading;
+    }
+
+    public void setLoading(boolean loading) {
+        this.loading = loading;
     }
 }
