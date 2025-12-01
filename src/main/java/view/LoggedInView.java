@@ -71,23 +71,22 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
 
         final JButton filterSearchButton = new JButton("Filter Search");
         final JButton historyButton = new JButton("History");
-        final JButton marketOpenButton = new JButton("Market Open");
         final JButton accountButton = new JButton("Account");
 
         topToolbar.add(newsButton);
         topToolbar.add(filterSearchButton);
         topToolbar.add(historyButton);
-        topToolbar.add(marketOpenButton);
         topToolbar.add(accountButton);
 
-        this.add(topToolbar, BorderLayout.NORTH);
-
         marketStatusLabel = new JLabel("Loading market status...");
-        marketStatusLabel.setFont(marketStatusLabel.getFont().deriveFont(Font.PLAIN, 11f));
+        marketStatusLabel.setFont(
+                marketStatusLabel.getFont().deriveFont(Font.PLAIN, 11f)
+        );
         marketStatusLabel.setForeground(Color.DARK_GRAY);
 
         topToolbar.add(Box.createHorizontalStrut(20));
         topToolbar.add(marketStatusLabel);
+        this.add(topToolbar, BorderLayout.NORTH);
 
         final JPanel centerPanel = new JPanel();
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
