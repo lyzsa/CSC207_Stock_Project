@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 public class FinnhubStockSearchDataAccessObject implements StockSearchDataAccessInterface {
     private static final String QUOTE_URL = "https://finnhub.io/api/v1/quote";
     private static final String SEARCH_URL = "https://finnhub.io/api/v1/search";
+    private static final String PROFILE_URL = "https://finnhub.io/api/v1/stock/profile2";
 
     private final String apiKey;
 
@@ -43,8 +44,18 @@ public class FinnhubStockSearchDataAccessObject implements StockSearchDataAccess
                 .append("&token=")
                 .append(URLEncoder.encode(apiKey, StandardCharsets.UTF_8));
 
-        JSONObject json = fetchJsonObject(urlBuilder.toString());
-        return parseQuote(resolvedSymbol, json);
+        JSONObject quoteJson = fetchJsonObject(urlBuilder.toString());
+
+        // Load basic profile information for extra context
+        StringBuilder profileUrlBuilder = new StringBuilder(PROFILE_URL)
+                .append("?symbol=")
+                .append(URLEncoder.encode(resolvedSymbol, StandardCharsets.UTF_8))
+                .append("&token=")
+                .append(URLEncoder.encode(apiKey, StandardCharsets.UTF_8));
+
+        JSONObject profileJson = fetchJsonObject(profileUrlBuilder.toString());
+
+        return parseQuote(resolvedSymbol, quoteJson, profileJson);
     }
 
     /**
@@ -148,18 +159,33 @@ public class FinnhubStockSearchDataAccessObject implements StockSearchDataAccess
         }
     }
 
-    private StockQuote parseQuote(String symbol, JSONObject obj) {
-        if (obj == null) {
+    private StockQuote parseQuote(String symbol, JSONObject quoteJson, JSONObject profileJson) {
+        if (quoteJson == null) {
             throw new IllegalStateException("Empty response from Finnhub quote endpoint.");
         }
 
-        double current = obj.optDouble("c", Double.NaN);
-        double open = obj.optDouble("o", Double.NaN);
-        double high = obj.optDouble("h", Double.NaN);
-        double low = obj.optDouble("l", Double.NaN);
-        double prevClose = obj.optDouble("pc", Double.NaN);
-        long t = obj.optLong("t", 0L);
+        double current = quoteJson.optDouble("c", Double.NaN);
+        double open = quoteJson.optDouble("o", Double.NaN);
+        double high = quoteJson.optDouble("h", Double.NaN);
+        double low = quoteJson.optDouble("l", Double.NaN);
+        double prevClose = quoteJson.optDouble("pc", Double.NaN);
+        long t = quoteJson.optLong("t", 0L);
 
-        return new StockQuote(symbol, current, open, high, low, prevClose, t);
+        String companyName = null;
+        String exchange = null;
+        String industry = null;
+        double marketCap = Double.NaN;
+
+        if (profileJson != null) {
+            // Fields from /stock/profile2
+            companyName = profileJson.optString("name", null);
+            exchange = profileJson.optString("exchange", null);
+            // Finnhub industry field can be "finnhubIndustry" or sector-like labels
+            industry = profileJson.optString("finnhubIndustry", null);
+            marketCap = profileJson.optDouble("marketCapitalization", Double.NaN);
+        }
+
+        return new StockQuote(symbol, companyName, exchange, industry, marketCap,
+                current, open, high, low, prevClose, t);
     }
 }
