@@ -3,6 +3,8 @@ package view;
 import interface_adapter.logged_in.ChangePasswordController;
 import interface_adapter.logged_in.LoggedInState;
 import interface_adapter.logged_in.LoggedInViewModel;
+import interface_adapter.stock_search.StockSearchController;
+import interface_adapter.stock_search.StockSearchViewModel;
 import interface_adapter.logout.LogoutController;
 import interface_adapter.news.NewsController;
 import interface_adapter.ViewManagerModel;
@@ -35,6 +37,9 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
     private String realtimeTradeViewName;
     private JLabel marketStatusLabel;
     private MarketStatusViewModel marketStatusViewModel;
+
+    private StockSearchController stockSearchController;
+    private StockSearchViewModel stockSearchViewModel;
 
     private final JLabel username;
 
@@ -144,6 +149,12 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
 
         this.add(centerPanel, BorderLayout.CENTER);
 
+        searchButton.addActionListener(e -> {
+            if (stockSearchController != null) {
+                stockSearchController.search(searchStockField.getText());
+            }
+        });
+
         final JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.add(addToWatchlistButton, BorderLayout.CENTER);
 
@@ -225,6 +236,27 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
 
     public void setChangePasswordController(ChangePasswordController changePasswordController) {
         this.changePasswordController = changePasswordController;
+    }
+
+    public void setStockSearchController(StockSearchController stockSearchController) {
+        this.stockSearchController = stockSearchController;
+    }
+
+    public void setStockSearchViewModel(StockSearchViewModel stockSearchViewModel) {
+        this.stockSearchViewModel = stockSearchViewModel;
+        this.stockSearchViewModel.addPropertyChangeListener(evt -> {
+            if (!"state".equals(evt.getPropertyName())) {
+                return;
+            }
+            StockSearchViewModel vm = (StockSearchViewModel) evt.getNewValue();
+            if (vm.getErrorMessage() != null && !vm.getErrorMessage().isBlank()) {
+                stockInfoArea.setText(vm.getErrorMessage());
+            } else if (vm.getInfoText() != null) {
+                stockInfoArea.setText(vm.getInfoText());
+            } else {
+                stockInfoArea.setText("");
+            }
+        });
     }
 
     public void setLogoutController(LogoutController logoutController) {
