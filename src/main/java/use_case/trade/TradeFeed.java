@@ -1,4 +1,4 @@
-package use_case;
+package use_case.trade;
 
 /**
  * Abstraction for any real-time trade data source.

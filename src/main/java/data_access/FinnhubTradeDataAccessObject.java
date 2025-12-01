@@ -6,8 +6,8 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
-import use_case.TradeFeed;
-import use_case.TradeListener;
+import use_case.trade.TradeFeed;
+import use_case.trade.TradeListener;
 
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;

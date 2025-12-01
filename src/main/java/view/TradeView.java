@@ -2,23 +2,20 @@ package view;
 
 import entity.Trade;
 import interface_adapter.ViewManagerModel;
-import use_case.TradeFeed;
-import use_case.TradeListener;
+import use_case.trade.TradeFeed;
+import use_case.trade.TradeListener;
 
 import javax.swing.*;
 import java.awt.*;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.logging.Logger;
 
 /**
  * Swing view for displaying real-time trade data.
  * Depends only on the TradeFeed abstraction and domain Trade entity.
  */
 public class TradeView extends JPanel {
-
-    private static final Logger LOGGER = Logger.getLogger(TradeView.class.getName());
 
     private final String viewName = "trade";
     private ViewManagerModel viewManagerModel;

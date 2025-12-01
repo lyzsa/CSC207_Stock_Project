@@ -68,7 +68,7 @@ import use_case.market_status.MarketStatusOutputBoundary;
 import use_case.market_status.MarketStatusDataAccessInterface;
 import data_access.MarketStatusDataAccessObject;
 import data_access.FinnhubTradeDataAccessObject;
-import use_case.TradeFeed;
+import use_case.trade.TradeFeed;
 import view.*;
 
 import javax.swing.*;
@@ -191,7 +191,6 @@ public class AppBuilder {
         TradeFeed tradeFeed = new FinnhubTradeDataAccessObject();
         tradeView = new TradeView(tradeFeed);
         String viewName = tradeView.getViewName();
-        System.out.println("Adding TradeView with name: " + viewName); // debug
         cardPanel.add(tradeView, viewName);
         return this;
     }
