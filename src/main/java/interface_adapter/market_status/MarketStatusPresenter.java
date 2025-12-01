@@ -15,19 +15,22 @@ public class MarketStatusPresenter implements  MarketStatusOutputBoundary {
     public void prepareSuccessView(MarketStatusResponseModel responseModel) {
         MarketStatus status = responseModel.getMarketStatus();
 
-        boolean open = status.isOpen();
-        String session = status.getSession();
+        boolean open   = status.isOpen();
+        String session = status.getSession();   // e.g. "pre-market", "regular", "post-market", or null
         String holiday = status.getHoliday();
 
-        // Status message
+        String sessionNorm = (session == null) ? "" : session.toLowerCase();
         String text;
-        if (open) {
-            if (session != null && !session.isBlank()) {
-                text = "US market is OPEN (" + session + ")";
-            } else {
-                text = "US market is OPEN";
-            }
+
+        // Treat any "pre-..." as pre-market, any "post-..." as post-market
+        if (sessionNorm.startsWith("pre")) {
+            text = "US market in PRE-MARKET session";
+        } else if (sessionNorm.startsWith("post")) {
+            text = "US market in POST-MARKET session";
+        } else if ("regular".equals(sessionNorm) || open) {
+            text = "US market is OPEN (regular session)";
         } else {
+            // truly closed – weekend / holiday / after hours with no session info
             if (holiday != null && !holiday.isBlank()) {
                 text = "US market is CLOSED (Holiday: " + holiday + ")";
             } else {
@@ -36,7 +39,7 @@ public class MarketStatusPresenter implements  MarketStatusOutputBoundary {
         }
 
         viewModel.setStatusText(text);
-        viewModel.setOpen(open);
+        viewModel.setOpen(open);                 // raw flag from API
         viewModel.setSession(session);
         viewModel.setHoliday(holiday);
         viewModel.setTimezone(status.getTimezone());
@@ -44,7 +47,6 @@ public class MarketStatusPresenter implements  MarketStatusOutputBoundary {
 
         viewModel.firePropertyChanged();
     }
-
     @Override
     public void prepareFailView(String errorMessage) {
         viewModel.setStatusText("Market status unavailable");
