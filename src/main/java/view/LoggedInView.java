@@ -99,6 +99,18 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
             }
         });
 
+        final JButton realtimeTradeButton = new JButton("Realtime Trade");
+        realtimeTradeButton.addActionListener(e -> {
+            System.out.println("Realtime Trade button clicked"); // debug
+            System.out.println("viewManagerModel: " + viewManagerModel); // debug
+            System.out.println("realtimeTradeViewName: " + realtimeTradeViewName); // debug
+            if (viewManagerModel != null && realtimeTradeViewName != null) {
+                viewManagerModel.setState(realtimeTradeViewName);
+                viewManagerModel.firePropertyChange();
+            } else {
+                System.out.println("ERROR: Cannot navigate - viewManagerModel or realtimeTradeViewName is null"); // debug
+            }
+        });
 
         final JButton accountButton = new JButton("Account");
         accountButton.addActionListener(e -> {
@@ -112,6 +124,7 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
         topToolbar.add(newsButton);
         topToolbar.add(filterSearchButton);
         topToolbar.add(historyButton);
+        topToolbar.add(realtimeTradeButton);
         topToolbar.add(accountButton);
 
         marketStatusLabel = new JLabel("Loading market status...");
@@ -297,6 +310,11 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
         this.accountViewName = accountViewName;
     }
 
+    public void setRealtimeTradeNavigation(ViewManagerModel viewManagerModel,
+                                           String tradeViewName) {
+        this.viewManagerModel = viewManagerModel;
+        this.realtimeTradeViewName = tradeViewName;
+    }
 
     public void setMarketStatusViewModel(MarketStatusViewModel viewModel) {
         this.marketStatusViewModel = viewModel;
