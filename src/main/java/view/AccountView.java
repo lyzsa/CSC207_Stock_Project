@@ -39,7 +39,7 @@ public class AccountView extends JPanel implements PropertyChangeListener {
             }
         });
 
-        usernameLabel = new JLabel("Username: ");
+        usernameLabel = new JLabel("Watchlist");
         usernameLabel.setHorizontalAlignment(SwingConstants.CENTER);
         topPanel.add(usernameLabel, BorderLayout.CENTER);
 
@@ -54,9 +54,6 @@ public class AccountView extends JPanel implements PropertyChangeListener {
     }
 
     public void propertyChange(PropertyChangeEvent evt) {
-
-        String username = viewModel.getState().getUsername();
-        usernameLabel.setText("Username: " + username);
 
         watchlistPanel.removeAll();
 
