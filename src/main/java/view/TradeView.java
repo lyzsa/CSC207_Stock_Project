@@ -2,26 +2,30 @@ package view;
 
 import entity.Trade;
 import interface_adapter.ViewManagerModel;
-import use_case.trade.TradeFeed;
-import use_case.trade.TradeListener;
+import interface_adapter.trade.TradeController;
+import interface_adapter.trade.TradeState;
+import interface_adapter.trade.TradeViewModel;
 
 import javax.swing.*;
 import java.awt.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 /**
  * Swing view for displaying real-time trade data.
- * Depends only on the TradeFeed abstraction and domain Trade entity.
+ * Follows Clean Architecture pattern using Controller and ViewModel.
  */
-public class TradeView extends JPanel {
+public class TradeView extends JPanel implements PropertyChangeListener {
 
     private final String viewName = "trade";
     private ViewManagerModel viewManagerModel;
     private String homeViewName;
 
-    private final TradeFeed tradeFeed;
+    private final TradeController tradeController;
+    private final TradeViewModel tradeViewModel;
 
     // Trade data labels
     private final JLabel symbolLabel = new JLabel("---");
@@ -42,11 +46,14 @@ public class TradeView extends JPanel {
     /**
      * Initializes the GUI components.
      */
-    public TradeView(TradeFeed tradeFeed) {
-        this.tradeFeed = tradeFeed;
+    public TradeView(TradeController tradeController, TradeViewModel tradeViewModel) {
+        this.tradeController = tradeController;
+        this.tradeViewModel = tradeViewModel;
+        
+        tradeViewModel.addPropertyChangeListener(this);
+        
         setLayout(new BorderLayout());
 
-        // --- Top: Back button + status ---
         JPanel topPanel = new JPanel(new BorderLayout());
 
         JPanel backPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -127,150 +134,77 @@ public class TradeView extends JPanel {
     }
 
     /**
-     * Handles the Connect button click by delegating to the TradeFeed.
+     * Handles the Connect button click by delegating to the Controller.
      */
     private void onConnectClicked() {
-        if (tradeFeed != null) {
-            // Check if already connected - user must disconnect first
-            if (isConnected) {
-                JOptionPane.showMessageDialog(
-                    this,
-                    "Please disconnect from the current trade before connecting to a new one.",
-                    "Already Connected",
-                    JOptionPane.WARNING_MESSAGE
-                );
-                return;
-            }
-            
-            String symbol = symbolInputField.getText().trim();
-            if (symbol.isEmpty()) {
-                statusLabel.setText("Status: Please enter a symbol");
-                statusLabel.setForeground(Color.RED);
-                return;
-            }
-            
-            // Check rate limiting - prevent too frequent connection attempts
-            long currentTime = System.currentTimeMillis();
-            long timeSinceLastAttempt = currentTime - lastConnectionAttemptTime;
-            
-            if (timeSinceLastAttempt < CONNECTION_COOLDOWN_MS) {
-                long remainingTime = (CONNECTION_COOLDOWN_MS - timeSinceLastAttempt) / 1000;
-                JOptionPane.showMessageDialog(
-                    this,
-                    "Please wait " + remainingTime + " second(s) before connecting again.\nToo many requests may result in rate limiting.",
-                    "Rate Limit",
-                    JOptionPane.WARNING_MESSAGE
-                );
-                return;
-            }
-            
-            // Update last connection attempt time
-            lastConnectionAttemptTime = currentTime;
-            
-            // Disconnect previous connection if any
-            tradeFeed.disconnect();
-            
-            // Reset state
-            currentSymbol = symbol;
-            connectionStartTime = System.currentTimeMillis();
-            symbolLabel.setText("---");
-            priceLabel.setText("---");
-            volumeLabel.setText("---");
-            timestampLabel.setText("---");
-            
-            // Disable connect button during connection attempt, enable disconnect button
-            connectButton.setEnabled(false);
-            disconnectButton.setEnabled(true);
-            
-            // Immediately show "Connecting..." while we wait for the first trade.
-            statusLabel.setText("Status: Connecting...");
-            statusLabel.setForeground(Color.ORANGE);
-
-            tradeFeed.connect(symbol, new TradeListener() {
-                @Override
-                public void onTrade(Trade trade) {
-                    connectionStartTime = 0; // Reset timeout on first trade
-                    isConnected = true; // Mark as connected on first trade
-                    SwingUtilities.invokeLater(() -> {
-                        connectButton.setEnabled(false); // Disable connect when connected
-                        disconnectButton.setEnabled(true); // Enable disconnect when connected
-                    });
-                    updateTradeOnUi(trade);
-                }
-
-                @Override
-                public void onStatusChanged(String statusText, boolean isError) {
-                    SwingUtilities.invokeLater(() -> {
-                        if (isError) {
-                            // On error, re-enable connect button and disable disconnect
-                            connectButton.setEnabled(true);
-                            disconnectButton.setEnabled(false);
-                            isConnected = false;
-                        } else if (statusText.contains("Disconnected")) {
-                            // On disconnect, reset button states
-                            connectButton.setEnabled(true);
-                            disconnectButton.setEnabled(false);
-                            isConnected = false;
-                        }
-                    });
-                    updateStatusOnUi(statusText, isError);
-                    
-                    // Combined error handling for rate limiting and symbol not found
-                    if (isError) {
-                        boolean isRateLimit = statusText.contains("429") || statusText.contains("Too Many Requests") || statusText.contains("Rate limit");
-                        boolean isOtherError = statusText.contains("Error") || statusText.contains("Failure");
-                        
-                        if (isRateLimit || isOtherError) {
-                            SwingUtilities.invokeLater(() -> {
-                                String message;
-                                if (isRateLimit) {
-                                    message = "Connection failed: Too Many Requests (429).\n" +
-                                              "This may also occur if the symbol '" + currentSymbol + "' is invalid.\n\n" +
-                                              "Please wait " + (CONNECTION_COOLDOWN_MS / 1000) + 
-                                              " seconds before trying again.\n" +
-                                              "If the problem persists, please verify the symbol is correct.";
-                                    // Enforce cooldown after 429 error
-                                    lastConnectionAttemptTime = System.currentTimeMillis();
-                                    startCooldownTimer();
-                                } else {
-                                    message = "Connection failed: Symbol '" + currentSymbol + "' not found or invalid.\n" +
-                                              "This may also occur if requests are made too frequently.\n\n" +
-                                              "Please wait " + (CONNECTION_COOLDOWN_MS / 1000) + 
-                                              " seconds before trying again.\n" +
-                                              "If the problem persists, please verify the symbol is correct.";
-                                    // Enforce cooldown for other errors too
-                                    lastConnectionAttemptTime = System.currentTimeMillis();
-                                    startCooldownTimer();
-                                }
-                                
-                                JOptionPane.showMessageDialog(
-                                    TradeView.this,
-                                    message,
-                                    "Connection Error",
-                                    JOptionPane.ERROR_MESSAGE
-                                );
-                            });
-                        }
-                    }
-                }
-            });
-            
-            // Start a timeout check for symbol not found
-            startSymbolNotFoundCheck();
+        // Check if already connected - user must disconnect first
+        if (isConnected) {
+            JOptionPane.showMessageDialog(
+                this,
+                "Please disconnect from the current trade before connecting to a new one.",
+                "Already Connected",
+                JOptionPane.WARNING_MESSAGE
+            );
+            return;
         }
+        
+        String symbol = symbolInputField.getText().trim();
+        if (symbol.isEmpty()) {
+            statusLabel.setText("Status: Please enter a symbol");
+            statusLabel.setForeground(Color.RED);
+            return;
+        }
+        
+        // Check rate limiting - prevent too frequent connection attempts
+        long currentTime = System.currentTimeMillis();
+        long timeSinceLastAttempt = currentTime - lastConnectionAttemptTime;
+        
+        if (timeSinceLastAttempt < CONNECTION_COOLDOWN_MS) {
+            long remainingTime = (CONNECTION_COOLDOWN_MS - timeSinceLastAttempt) / 1000;
+            JOptionPane.showMessageDialog(
+                this,
+                "Please wait " + remainingTime + " second(s) before connecting again.\nToo many requests may result in rate limiting.",
+                "Rate Limit",
+                JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+        
+        // Update last connection attempt time
+        lastConnectionAttemptTime = currentTime;
+        
+        // Reset state
+        currentSymbol = symbol;
+        connectionStartTime = System.currentTimeMillis();
+        symbolLabel.setText("---");
+        priceLabel.setText("---");
+        volumeLabel.setText("---");
+        timestampLabel.setText("---");
+        
+        // Disable connect button during connection attempt, enable disconnect button
+        connectButton.setEnabled(false);
+        disconnectButton.setEnabled(true);
+        
+        // Immediately show "Connecting..." while we wait for the first trade.
+        statusLabel.setText("Status: Connecting...");
+        statusLabel.setForeground(Color.ORANGE);
+        
+        // Execute through controller
+        tradeController.execute(symbol);
+        
+        // Start a timeout check for symbol not found
+        startSymbolNotFoundCheck();
     }
     
     /**
      * Handles the Disconnect button click.
      */
     private void onDisconnectClicked() {
-        if (tradeFeed != null) {
-            // Disconnect from the trade feed
-            tradeFeed.disconnect();
-            
-            // Reset all info to default
-            resetToDefault();
-        }
+        // Disconnect through controller
+        tradeController.disconnect();
+        
+        // Reset all info to default
+        resetToDefault();
     }
     
     /**
@@ -322,7 +256,7 @@ public class TradeView extends JPanel {
                             );
                             statusLabel.setText("Status: Connection failed");
                             statusLabel.setForeground(Color.RED);
-                            tradeFeed.disconnect();
+                            tradeController.disconnect();
                             resetToDefault();
                             // Enforce cooldown after timeout
                             lastConnectionAttemptTime = System.currentTimeMillis();
@@ -394,6 +328,12 @@ public class TradeView extends JPanel {
             } else {
                 timestampLabel.setText("N/A");
             }
+            
+            // Mark as connected on first trade
+            connectionStartTime = 0; // Reset timeout on first trade
+            isConnected = true;
+            connectButton.setEnabled(false);
+            disconnectButton.setEnabled(true);
         });
     }
 
@@ -405,14 +345,72 @@ public class TradeView extends JPanel {
             statusLabel.setText(statusText);
             if (isError) {
                 statusLabel.setForeground(Color.RED);
+                // On error, re-enable connect button and disable disconnect
+                connectButton.setEnabled(true);
+                disconnectButton.setEnabled(false);
+                isConnected = false;
+                
+                // Combined error handling for rate limiting and symbol not found
+                boolean isRateLimit = statusText.contains("429") || statusText.contains("Too Many Requests") || statusText.contains("Rate limit");
+                boolean isOtherError = statusText.contains("Error") || statusText.contains("Failure");
+                
+                if (isRateLimit || isOtherError) {
+                    String message;
+                    if (isRateLimit) {
+                        message = "Connection failed: Too Many Requests (429).\n" +
+                                  "This may also occur if the symbol '" + currentSymbol + "' is invalid.\n\n" +
+                                  "Please wait " + (CONNECTION_COOLDOWN_MS / 1000) + 
+                                  " seconds before trying again.\n" +
+                                  "If the problem persists, please verify the symbol is correct.";
+                        // Enforce cooldown after 429 error
+                        lastConnectionAttemptTime = System.currentTimeMillis();
+                        startCooldownTimer();
+                    } else {
+                        message = "Connection failed: Symbol '" + currentSymbol + "' not found or invalid.\n" +
+                                  "This may also occur if requests are made too frequently.\n\n" +
+                                  "Please wait " + (CONNECTION_COOLDOWN_MS / 1000) + 
+                                  " seconds before trying again.\n" +
+                                  "If the problem persists, please verify the symbol is correct.";
+                        // Enforce cooldown for other errors too
+                        lastConnectionAttemptTime = System.currentTimeMillis();
+                        startCooldownTimer();
+                    }
+                    
+                    JOptionPane.showMessageDialog(
+                        TradeView.this,
+                        message,
+                        "Connection Error",
+                        JOptionPane.ERROR_MESSAGE
+                    );
+                }
             } else if (statusText != null && statusText.contains("Connected")) {
                 statusLabel.setForeground(new Color(0, 128, 0));
             } else if (statusText != null && statusText.contains("Connecting")) {
                 statusLabel.setForeground(Color.ORANGE);
+            } else if (statusText != null && statusText.contains("Disconnected")) {
+                statusLabel.setForeground(Color.BLACK);
+                // On disconnect, reset button states
+                connectButton.setEnabled(true);
+                disconnectButton.setEnabled(false);
+                isConnected = false;
             } else {
                 statusLabel.setForeground(Color.BLACK);
             }
         });
+    }
+    
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        TradeState state = tradeViewModel.getState();
+        if (state != null) {
+            // Update UI based on ViewModel state
+            if (state.getCurrentTrade() != null) {
+                updateTradeOnUi(state.getCurrentTrade());
+            }
+            if (state.getStatusText() != null) {
+                updateStatusOnUi(state.getStatusText(), state.isError());
+            }
+        }
     }
 
     public String getViewName() {
@@ -424,4 +422,3 @@ public class TradeView extends JPanel {
         this.homeViewName = homeViewName;
     }
 }
-

@@ -68,7 +68,13 @@ import use_case.market_status.MarketStatusOutputBoundary;
 import use_case.market_status.MarketStatusDataAccessInterface;
 import data_access.MarketStatusDataAccessObject;
 import data_access.FinnhubTradeDataAccessObject;
-import use_case.trade.TradeFeed;
+import use_case.trade.TradeDataAccessInterface;
+import use_case.trade.TradeInputBoundary;
+import use_case.trade.TradeInteractor;
+import use_case.trade.TradeOutputBoundary;
+import interface_adapter.trade.TradeController;
+import interface_adapter.trade.TradePresenter;
+import interface_adapter.trade.TradeViewModel;
 import view.*;
 
 import javax.swing.*;
@@ -188,10 +194,20 @@ public class AppBuilder {
     }
 
     public AppBuilder addTradeView() {
-        TradeFeed tradeFeed = new FinnhubTradeDataAccessObject();
-        tradeView = new TradeView(tradeFeed);
-        String viewName = tradeView.getViewName();
-        cardPanel.add(tradeView, viewName);
+        // ViewModel
+        TradeViewModel tradeViewModel = new TradeViewModel();
+        
+        // Presenter + Interactor
+        TradeOutputBoundary tradeOutputBoundary = new TradePresenter(tradeViewModel);
+        TradeDataAccessInterface tradeDataAccess = new FinnhubTradeDataAccessObject();
+        TradeInputBoundary tradeInteractor = new TradeInteractor(tradeDataAccess, tradeOutputBoundary);
+        
+        // Controller
+        TradeController tradeController = new TradeController(tradeInteractor);
+        
+        // Swing view
+        tradeView = new TradeView(tradeController, tradeViewModel);
+        cardPanel.add(tradeView, tradeView.getViewName());
         return this;
     }
 

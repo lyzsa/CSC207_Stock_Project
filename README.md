@@ -52,21 +52,6 @@ src/main/java/
 - Maven 3.6+
 - Internet connection (for API access)
 
-### Running the Application
-
-1. Clone the repository
-2. Navigate to the project directory
-3. Build the project:
-   ```bash
-   mvn clean compile
-   ```
-4. Run the application:
-   ```bash
-   mvn exec:java -Dexec.mainClass="app.Main"
-   ```
-
-Or run directly from your IDE by executing `app.Main`.
-
 ### First Time Setup
 
 1. **Create an Account**: Click "Sign Up" to create a new user account

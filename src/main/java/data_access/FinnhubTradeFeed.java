@@ -6,7 +6,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
-import use_case.trade.TradeFeed;
+import use_case.trade.TradeDataAccessInterface;
 import use_case.trade.TradeListener;
 
 import java.time.Instant;
@@ -15,10 +15,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Finnhub-specific implementation of the TradeFeed abstraction.
+ * Finnhub-specific implementation of the TradeDataAccessInterface.
  * This class belongs to the data_access / infrastructure layer and knows about WebSockets and JSON format.
  */
-public class FinnhubTradeFeed implements TradeFeed {
+public class FinnhubTradeFeed implements TradeDataAccessInterface {
 
     private static final Logger LOGGER = Logger.getLogger(FinnhubTradeFeed.class.getName());
 
