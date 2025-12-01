@@ -16,13 +16,14 @@ public class Main {
                 .addFilterSearchUseCase()
                 .addNewsView()
                 .addEarningsHistoryView()
-                .addStockSearchUseCase()
+                .addTradeView()
                 .addSignupUseCase()
                 .addLoginUseCase()
                 .addChangePasswordUseCase()
                 .addNewsUsecase()
                 .addEarningsHistoryUseCase()
                 .addMarketStatusUseCase()
+                .addRealtimeTradeUseCase()
                 .build();
 
         application.pack();
