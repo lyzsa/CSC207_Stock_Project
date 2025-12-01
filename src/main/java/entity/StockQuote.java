@@ -2,6 +2,10 @@ package entity;
 
 public class StockQuote {
     private final String symbol;
+    private final String companyName;
+    private final String exchange;
+    private final String industry;
+    private final double marketCap;
     private final double currentPrice;
     private final double open;
     private final double high;
@@ -10,6 +14,10 @@ public class StockQuote {
     private final long timestamp;
 
     public StockQuote(String symbol,
+                      String companyName,
+                      String exchange,
+                      String industry,
+                      double marketCap,
                       double currentPrice,
                       double open,
                       double high,
@@ -17,6 +25,10 @@ public class StockQuote {
                       double previousClose,
                       long timestamp) {
         this.symbol = symbol;
+        this.companyName = companyName;
+        this.exchange = exchange;
+        this.industry = industry;
+        this.marketCap = marketCap;
         this.currentPrice = currentPrice;
         this.open = open;
         this.high = high;
@@ -27,6 +39,22 @@ public class StockQuote {
 
     public String getSymbol() {
         return symbol;
+    }
+
+    public String getCompanyName() {
+        return companyName;
+    }
+
+    public String getExchange() {
+        return exchange;
+    }
+
+    public String getIndustry() {
+        return industry;
+    }
+
+    public double getMarketCap() {
+        return marketCap;
     }
 
     public double getCurrentPrice() {
