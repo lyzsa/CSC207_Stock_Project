@@ -29,6 +29,10 @@ public class StockSearchInteractor implements StockSearchInputBoundary {
 
             StockSearchResponseModel responseModel = new StockSearchResponseModel(
                     quote.getSymbol(),
+                    quote.getCompanyName(),
+                    quote.getExchange(),
+                    quote.getIndustry(),
+                    quote.getMarketCap(),
                     quote.getCurrentPrice(),
                     quote.getOpen(),
                     quote.getHigh(),

@@ -1,48 +1,76 @@
 package use_case.stock_search;
 
-import entity.StockQuote;
+public class StockSearchResponseModel {
+    private final String symbol;
+    private final String companyName;
+    private final String exchange;
+    private final String industry;
+    private final double marketCap;
+    private final double currentPrice;
+    private final double open;
+    private final double high;
+    private final double low;
+    private final double previousClose;
 
-public class StockSearchInteractor implements StockSearchInputBoundary {
-
-    private final StockSearchDataAccessInterface dataAccess;
-    private final StockSearchOutputBoundary presenter;
-
-    public StockSearchInteractor(StockSearchDataAccessInterface dataAccess,
-                                 StockSearchOutputBoundary presenter) {
-        this.dataAccess = dataAccess;
-        this.presenter = presenter;
+    public StockSearchResponseModel(String symbol,
+                                    String companyName,
+                                    String exchange,
+                                    String industry,
+                                    double marketCap,
+                                    double currentPrice,
+                                    double open,
+                                    double high,
+                                    double low,
+                                    double previousClose) {
+        this.symbol = symbol;
+        this.companyName = companyName;
+        this.exchange = exchange;
+        this.industry = industry;
+        this.marketCap = marketCap;
+        this.currentPrice = currentPrice;
+        this.open = open;
+        this.high = high;
+        this.low = low;
+        this.previousClose = previousClose;
     }
 
-    @Override
-    public void execute(StockSearchRequestModel requestModel) {
-        String symbol = requestModel.getSymbol();
+    public String getSymbol() {
+        return symbol;
+    }
 
-        if (symbol == null || symbol.trim().isEmpty()) {
-            presenter.prepareFailView("Please enter a symbol.");
-            return;
-        }
+    public String getCompanyName() {
+        return companyName;
+    }
 
-        symbol = symbol.trim().toUpperCase();
+    public String getExchange() {
+        return exchange;
+    }
 
-        try {
-            StockQuote quote = dataAccess.loadQuote(symbol);
+    public String getIndustry() {
+        return industry;
+    }
 
-            StockSearchResponseModel responseModel = new StockSearchResponseModel(
-                    quote.getSymbol(),
-                    quote.getCompanyName(),
-                    quote.getExchange(),
-                    quote.getIndustry(),
-                    quote.getMarketCap(),
-                    quote.getCurrentPrice(),
-                    quote.getOpen(),
-                    quote.getHigh(),
-                    quote.getLow(),
-                    quote.getPreviousClose()
-            );
-            presenter.prepareSuccessView(responseModel);
-        }
-        catch (Exception e) {
-            presenter.prepareFailView("Unable to load quote. " + e.getMessage());
-        }
+    public double getMarketCap() {
+        return marketCap;
+    }
+
+    public double getCurrentPrice() {
+        return currentPrice;
+    }
+
+    public double getOpen() {
+        return open;
+    }
+
+    public double getHigh() {
+        return high;
+    }
+
+    public double getLow() {
+        return low;
+    }
+
+    public double getPreviousClose() {
+        return previousClose;
     }
 }
