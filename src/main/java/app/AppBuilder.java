@@ -74,8 +74,6 @@ import use_case.market_status.MarketStatusInteractor;
 import use_case.market_status.MarketStatusOutputBoundary;
 import use_case.market_status.MarketStatusDataAccessInterface;
 import data_access.MarketStatusDataAccessObject;
-import data_access.FinnhubTradeDataAccessObject;
-import use_case.TradeFeed;
 import view.*;
 
 import javax.swing.*;
@@ -108,7 +106,6 @@ public class AppBuilder {
     final MarketStatusDataAccessInterface marketStatusDataAccessObject =
             new MarketStatusDataAccessObject(apiKey);
 
-
     // DAO version using a shared external database
     // final DBUserDataAccessObject userDataAccessObject = new DBUserDataAccessObject(userFactory);
 
@@ -128,7 +125,6 @@ public class AppBuilder {
     private EarningsHistoryView earningsHistoryView;
     private AccountView accountView;
     private AccountViewModel accountViewModel;
-    private TradeView tradeView;
 
     private MarketStatusViewModel marketStatusViewModel;
     private MarketStatusController marketStatusController;
@@ -194,15 +190,6 @@ public class AppBuilder {
         earningsHistoryView = new EarningsHistoryView(controller, earningsHistoryViewModel);
 
         cardPanel.add(earningsHistoryView, earningsHistoryView.getViewName());
-        return this;
-    }
-
-    public AppBuilder addTradeView() {
-        TradeFeed tradeFeed = new FinnhubTradeDataAccessObject();
-        tradeView = new TradeView(tradeFeed);
-        String viewName = tradeView.getViewName();
-        System.out.println("Adding TradeView with name: " + viewName); // debug
-        cardPanel.add(tradeView, viewName);
         return this;
     }
 
@@ -339,18 +326,6 @@ public class AppBuilder {
         marketStatusController = new MarketStatusController(msInteractor);
         loggedInView.setMarketStatusViewModel(marketStatusViewModel);
         marketStatusController.updateStatus();
-        return this;
-    }
-
-    public AppBuilder addRealtimeTradeUseCase() {
-        // Logged-in page: Realtime Trade button → Trade view
-        String tradeViewName = tradeView.getViewName();
-        System.out.println("Setting up Realtime Trade navigation to view: " + tradeViewName); // debug
-        loggedInView.setRealtimeTradeNavigation(viewManagerModel, tradeViewName);
-
-        // Trade page: Back button → Logged-in view
-        tradeView.setBackNavigation(viewManagerModel, loggedInView.getViewName());
-
         return this;
     }
 
