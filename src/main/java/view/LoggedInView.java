@@ -1,5 +1,6 @@
 package view;
 
+import interface_adapter.account.AccountController;
 import interface_adapter.logged_in.ChangePasswordController;
 import interface_adapter.logged_in.LoggedInState;
 import interface_adapter.logged_in.LoggedInViewModel;
@@ -28,10 +29,12 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
     private ChangePasswordController changePasswordController = null;
     private LogoutController logoutController;
     private NewsController newsController;
+    private AccountController accountController;
     private ViewManagerModel viewManagerModel;
     private String newsViewName;
     private String filterSearchViewName;
     private String historyViewName;
+    private String accountViewName;
     private JLabel marketStatusLabel;
     private MarketStatusViewModel marketStatusViewModel;
 
@@ -89,7 +92,15 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
             }
         });
         final JButton marketOpenButton = new JButton("Market Open");
+
         final JButton accountButton = new JButton("Account");
+        accountButton.addActionListener(e -> {
+            System.out.println("Account button clicked"); // debug
+            if (viewManagerModel != null && newsViewName != null) {
+                viewManagerModel.setState(accountViewName);
+                viewManagerModel.firePropertyChange();
+            }
+        });
 
         topToolbar.add(newsButton);
         topToolbar.add(filterSearchButton);
@@ -130,6 +141,14 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
 
         final JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.add(addToWatchlistButton, BorderLayout.CENTER);
+
+//        addToWatchlistButton.addActionListener(e -> {
+//            if (accountController != null) {
+//
+//                JSONObject newItem = ...; // get stock info from somewhere
+//                accountController.addToWatchlist(username, newItem);
+//            }
+//        });
 
         this.add(bottomPanel, BorderLayout.SOUTH);
 
@@ -229,6 +248,12 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
                                      String historyViewName) {
         this.viewManagerModel = viewManagerModel;
         this.historyViewName = historyViewName;
+    }
+
+    public void setAccountNavigation(ViewManagerModel viewManagerModel,
+                                     String accountViewName) {
+        this.viewManagerModel = viewManagerModel;
+        this.accountViewName = accountViewName;
     }
 
 

@@ -21,6 +21,7 @@ public class Main {
                 .addChangePasswordUseCase()
                 .addNewsUsecase()
                 .addEarningsHistoryUseCase()
+                .addAccount()
                 .addMarketStatusUseCase()
                 .build();
 
