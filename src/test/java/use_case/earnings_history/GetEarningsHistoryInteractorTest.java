@@ -116,9 +116,9 @@ public class GetEarningsHistoryInteractorTest {
     }
 
     @Test
-    void daoReturnsNull_reportsSymbolNotSupported() {
+    void daoReturnsNull_SymbolNotSupported() {
         InMemoryEarningsDao dao = new InMemoryEarningsDao();
-        dao.recordsToReturn = null; // contract: null = company not found / unsupported
+        dao.recordsToReturn = null;
 
         RecordingPresenter presenter = new RecordingPresenter();
         GetEarningsHistoryInteractor interactor =
@@ -164,7 +164,7 @@ public class GetEarningsHistoryInteractorTest {
     }
 
     @Test
-    void daoReturnsRecords_callsSuccessWithThoseRecords() {
+    void daoReturnsRecords_callsSuccessWithRecords() {
         InMemoryEarningsDao dao = new InMemoryEarningsDao();
         dao.recordsToReturn = List.of(
                 sampleRecord("2024-Q1"),
@@ -185,6 +185,9 @@ public class GetEarningsHistoryInteractorTest {
         assertNull(presenter.lastConnectionErrorMessage);
         assertNull(presenter.lastNoDataMessage);
         assertNotNull(presenter.lastSuccess, "Success output expected");
+
+        // GetEarningsHistoryOutputData.getSymbol()
+        assertEquals("AAPL", presenter.lastSuccess.getSymbol());
 
         List<EarningsRecord> records = presenter.lastSuccess.getRecords();
         assertEquals(2, records.size());
