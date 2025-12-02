@@ -143,7 +143,6 @@ public class TradeView extends JPanel implements PropertyChangeListener {
      */
     private void onConnectClicked() {
         String symbol = symbolInputField.getText().trim();
-        System.out.println("TradeView: User entered symbol: '" + symbol + "'");
         if (symbol.isEmpty()) {
             statusLabel.setText("Status: Please enter a symbol");
             statusLabel.setForeground(Color.RED);
@@ -215,7 +214,6 @@ public class TradeView extends JPanel implements PropertyChangeListener {
         statusLabel.setForeground(Color.ORANGE);
         
         // Execute through controller
-        System.out.println("TradeView: Calling tradeController.execute with symbol: '" + symbol + "'");
         tradeController.execute(symbol);
         
         // Start a timeout check for symbol not found

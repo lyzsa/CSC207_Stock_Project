@@ -11,16 +11,12 @@ import use_case.trade.TradeListener;
 
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Finnhub-specific implementation of the TradeDataAccessInterface.
  * This class belongs to the data_access / infrastructure layer and knows about WebSockets and JSON format.
  */
 public class FinnhubTradeDataAccessObject implements TradeDataAccessInterface {
-
-    private static final Logger LOGGER = Logger.getLogger(FinnhubTradeDataAccessObject.class.getName());
 
     private static final String API_KEY = "d4977ehr01qshn3kvpt0d4977ehr01qshn3kvptg";
     private static final String WEB_SOCKET_URL = "wss://ws.finnhub.io?token=" + API_KEY;
@@ -40,19 +36,17 @@ public class FinnhubTradeDataAccessObject implements TradeDataAccessInterface {
         }
 
         if (webSocket != null) {
-            LOGGER.info("Closing existing Finnhub connection...");
             if (currentSymbol != null && !currentSymbol.isEmpty()) {
                 try {
                     String unsubscribeMsg = String.format("{\"type\":\"unsubscribe\",\"symbol\":\"%s\"}", currentSymbol);
                     webSocket.send(unsubscribeMsg);
-                    LOGGER.info("Unsubscribed from " + currentSymbol);
                     try {
                         Thread.sleep(100);
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                     }
                 } catch (Exception e) {
-                    LOGGER.log(Level.WARNING, "Error unsubscribing: " + e.getMessage());
+                    // Error unsubscribing
                 }
             }
             webSocket.close(1000, "Reconnecting");
@@ -70,7 +64,6 @@ public class FinnhubTradeDataAccessObject implements TradeDataAccessInterface {
             this.currentSymbol = null;
         }
         this.hasReceivedPing = false;
-        LOGGER.info("Setting currentSymbol to: '" + this.currentSymbol + "'");
 
         client = new OkHttpClient.Builder()
                 .readTimeout(0, TimeUnit.MILLISECONDS)
@@ -87,19 +80,12 @@ public class FinnhubTradeDataAccessObject implements TradeDataAccessInterface {
         webSocket = client.newWebSocket(request, new WebSocketListener() {
             @Override
             public void onOpen(WebSocket ws, Response response) {
-                LOGGER.info("WebSocket Opened. Subscribing to symbol: '" + currentSymbol + "'");
                 String subscribeMsg = String.format("{\"type\":\"subscribe\",\"symbol\":\"%s\"}", currentSymbol);
                 ws.send(subscribeMsg);
-                LOGGER.info("Sent subscribe message: " + subscribeMsg);
             }
 
             @Override
             public void onMessage(WebSocket ws, String text) {
-                LOGGER.info("Received raw message from WebSocket: " + text);
-                LOGGER.info("Message length: " + text.length() + " characters");
-                if (text != null && !text.isEmpty()) {
-                    LOGGER.info("First 200 chars of message: " + text.substring(0, Math.min(200, text.length())));
-                }
                 processMessage(text);
             }
         });
@@ -118,7 +104,7 @@ public class FinnhubTradeDataAccessObject implements TradeDataAccessInterface {
                         Thread.currentThread().interrupt();
                     }
                 } catch (Exception e) {
-                    LOGGER.log(Level.WARNING, "Error unsubscribing: " + e.getMessage());
+                    // Error unsubscribing
                 }
             }
             webSocket.close(1000, "User disconnect");
@@ -229,13 +215,10 @@ public class FinnhubTradeDataAccessObject implements TradeDataAccessInterface {
                         Trade trade = new Trade(symbol, price, volume, ts);
                         listener.onTrade(trade);
                     }
-                } else {
-                    LOGGER.info("Ignoring trade in array for symbol '" + normalizedReceivedSymbol +
-                               "' (current: '" + normalizedCurrentSymbol + "')");
                 }
             }
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Error processing trade array: " + e.getMessage(), e);
+            // Error processing trade array
         }
     }
 
@@ -247,7 +230,6 @@ public class FinnhubTradeDataAccessObject implements TradeDataAccessInterface {
         try {
             if (jsonMessage.contains("\"type\":\"ping\"")) {
                 hasReceivedPing = true;
-                LOGGER.info("Received PING: Connection is alive.");
                 return;
             }
 
@@ -300,22 +282,18 @@ public class FinnhubTradeDataAccessObject implements TradeDataAccessInterface {
 
             else if (jsonMessage.contains("\"type\":\"error\"")) {
                 String errorMsg = extractValue(jsonMessage, "msg");
-                LOGGER.warning("Received error message: " + errorMsg);
                 if (listener != null) {
                     String errorText = errorMsg != null ? errorMsg : "Unknown error";
                     listener.onStatusChanged("Status: Error - " + errorText, true);
                 }
             } else {
-                LOGGER.info("Received TEXT: " + jsonMessage);
                 // Check if it might be an array format we missed
                 if (jsonMessage.trim().startsWith("[") && jsonMessage.contains("\"s\"") && jsonMessage.contains("\"p\"")) {
-                    LOGGER.info("Message appears to be an array format, trying array processing");
                     processTradeArray(jsonMessage);
                 }
             }
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Error processing JSON message with manual parsing: " + e.getMessage()
-                    + "\nMessage: " + jsonMessage);
+            // Error processing JSON message
         }
     }
 }
