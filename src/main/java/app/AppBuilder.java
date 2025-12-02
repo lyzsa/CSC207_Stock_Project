@@ -204,18 +204,14 @@ public class AppBuilder {
     }
 
     public AppBuilder addTradeView() {
-        // ViewModel
         tradeViewModel = new TradeViewModel();
-        
-        // Presenter + Interactor
+
         TradeOutputBoundary tradeOutputBoundary = new TradePresenter(tradeViewModel);
         TradeDataAccessInterface tradeDataAccess = new FinnhubTradeDataAccessObject();
         TradeInputBoundary tradeInteractor = new TradeInteractor(tradeDataAccess, tradeOutputBoundary);
-        
-        // Controller
         TradeController tradeController = new TradeController(tradeInteractor);
         
-        // Swing view
+
         tradeView = new TradeView(tradeController, tradeViewModel);
         cardPanel.add(tradeView, tradeView.getViewName());
         return this;
@@ -360,14 +356,9 @@ public class AppBuilder {
     }
 
     public AppBuilder addRealtimeTradeUseCase() {
-        // Logged-in page: Realtime Trade button → Trade view
         String tradeViewName = tradeView.getViewName();
-        System.out.println("Setting up Realtime Trade navigation to view: " + tradeViewName); // debug
         loggedInView.setRealtimeTradeNavigation(viewManagerModel, tradeViewName);
-
-        // Trade page: Back button → Logged-in view
         tradeView.setBackNavigation(viewManagerModel, loggedInView.getViewName());
-
         return this;
     }
 

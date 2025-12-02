@@ -89,7 +89,12 @@ public class TradeView extends JPanel implements PropertyChangeListener {
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
         searchPanel.add(new JLabel("Symbol:"));
         symbolInputField.setText("BINANCE:BTCUSDT"); // Default value
+        symbolInputField.setToolTipText("Enter crypto pair (e.g., BINANCE:BTCUSDT). Stock symbols may not have real-time trade data.");
         searchPanel.add(symbolInputField);
+        
+        // Add a help label to guide users
+        JLabel helpLabel = new JLabel("<html><small style='color:gray;'>Note: Crypto pairs work best (e.g., BINANCE:BTCUSDT)</small></html>");
+        searchPanel.add(helpLabel);
         connectButton = new JButton("Connect");
         connectButton.addActionListener(e -> onConnectClicked());
         searchPanel.add(connectButton);
@@ -137,22 +142,28 @@ public class TradeView extends JPanel implements PropertyChangeListener {
      * Handles the Connect button click by delegating to the Controller.
      */
     private void onConnectClicked() {
-        // Check if already connected - user must disconnect first
-        if (isConnected) {
-            JOptionPane.showMessageDialog(
-                this,
-                "Please disconnect from the current trade before connecting to a new one.",
-                "Already Connected",
-                JOptionPane.WARNING_MESSAGE
-            );
-            return;
-        }
-        
         String symbol = symbolInputField.getText().trim();
+        System.out.println("TradeView: User entered symbol: '" + symbol + "'");
         if (symbol.isEmpty()) {
             statusLabel.setText("Status: Please enter a symbol");
             statusLabel.setForeground(Color.RED);
             return;
+        }
+        
+        // Warn user if they're using a stock symbol (not crypto)
+        if (!symbol.contains(":") || !symbol.toUpperCase().startsWith("BINANCE:")) {
+            int result = JOptionPane.showConfirmDialog(
+                this,
+                "Stock symbols (like AAPL, TSLA) may not have real-time trade data available.\n\n" +
+                "Crypto pairs (like BINANCE:BTCUSDT) work best for real-time trades.\n\n" +
+                "Do you want to continue with '" + symbol + "'?",
+                "Symbol Warning",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+            );
+            if (result == JOptionPane.NO_OPTION) {
+                return;
+            }
         }
         
         // Check rate limiting - prevent too frequent connection attempts
@@ -170,10 +181,24 @@ public class TradeView extends JPanel implements PropertyChangeListener {
             return;
         }
         
+        // Always disconnect first to ensure clean state
+        if (isConnected || connectionStartTime > 0) {
+            tradeController.disconnect();
+            // Reset state immediately
+            isConnected = false;
+            connectionStartTime = 0;
+            // Give a delay for disconnect to complete
+            try {
+                Thread.sleep(300);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        
         // Update last connection attempt time
         lastConnectionAttemptTime = currentTime;
         
-        // Reset state
+        // Reset state and set new connection start time
         currentSymbol = symbol;
         connectionStartTime = System.currentTimeMillis();
         symbolLabel.setText("---");
@@ -190,6 +215,7 @@ public class TradeView extends JPanel implements PropertyChangeListener {
         statusLabel.setForeground(Color.ORANGE);
         
         // Execute through controller
+        System.out.println("TradeView: Calling tradeController.execute with symbol: '" + symbol + "'");
         tradeController.execute(symbol);
         
         // Start a timeout check for symbol not found
@@ -234,19 +260,42 @@ public class TradeView extends JPanel implements PropertyChangeListener {
      * Starts a background thread to check if symbol is not found after timeout.
      */
     private void startSymbolNotFoundCheck() {
+        // Capture the connection start time and symbol for this specific connection attempt
+        final long checkStartTime = connectionStartTime;
+        final String checkSymbol = currentSymbol;
+        
         new Thread(() -> {
             try {
                 Thread.sleep(SYMBOL_NOT_FOUND_TIMEOUT);
-                // If we're still connecting after timeout and no trades received
-                if (connectionStartTime > 0 && System.currentTimeMillis() - connectionStartTime >= SYMBOL_NOT_FOUND_TIMEOUT) {
-                    SwingUtilities.invokeLater(() -> {
-                        if (symbolLabel.getText().equals("---")) {
+                SwingUtilities.invokeLater(() -> {
+                    // Only trigger timeout if:
+                    // 1. We're still checking the same symbol
+                    // 2. The connection start time hasn't changed (no new connection started)
+                    // 3. Enough time has passed since connection started
+                    // 4. No trades have been received (symbol label still shows "---")
+                    long currentTime = System.currentTimeMillis();
+                    if (checkSymbol.equals(currentSymbol) && 
+                        connectionStartTime == checkStartTime &&
+                        connectionStartTime > 0 &&
+                        currentTime - connectionStartTime >= SYMBOL_NOT_FOUND_TIMEOUT &&
+                        symbolLabel.getText().equals("---")) {
                             // No trades received - could be symbol not found or rate limiting
-                            String message = "Connection timeout: Symbol '" + currentSymbol + "' not found or no trades available.\n" +
-                                           "This may also occur if requests are made too frequently.\n\n" +
-                                           "Please wait " + (CONNECTION_COOLDOWN_MS / 1000) + 
-                                           " seconds before trying again.\n" +
-                                           "If the problem persists, please verify the symbol is correct.";
+                            boolean isCrypto = currentSymbol.contains(":") && currentSymbol.toUpperCase().startsWith("BINANCE:");
+                            String message = "Connection timeout: Symbol '" + currentSymbol + "' not found or no trades available.\n\n";
+                            if (!isCrypto) {
+                                message += "⚠️ IMPORTANT: Stock symbols (like AAPL, TSLA) typically do NOT have real-time trade data on Finnhub.\n" +
+                                          "The WebSocket trade feed primarily supports CRYPTO pairs.\n\n";
+                            }
+                            message += "This may also occur if:\n" +
+                                      "• Requests are made too frequently (rate limiting)\n" +
+                                      "• The symbol format is incorrect\n" +
+                                      "• The market is closed\n\n" +
+                                      "✅ RECOMMENDED: Use crypto pairs like:\n" +
+                                      "   • BINANCE:BTCUSDT\n" +
+                                      "   • BINANCE:ETHUSDT\n" +
+                                      "   • BINANCE:BNBUSDT\n\n" +
+                                      "Please wait " + (CONNECTION_COOLDOWN_MS / 1000) + 
+                                      " seconds before trying again.";
                             
                             JOptionPane.showMessageDialog(
                                 TradeView.this,
@@ -263,7 +312,6 @@ public class TradeView extends JPanel implements PropertyChangeListener {
                             startCooldownTimer();
                         }
                     });
-                }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

@@ -15,6 +15,7 @@ public class TradeController {
     }
     
     public void execute(String symbol) {
+        System.out.println("TradeController: Received symbol: '" + symbol + "'");
         TradeRequestModel requestModel = new TradeRequestModel(symbol);
         tradeInteractor.execute(requestModel);
     }

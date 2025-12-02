@@ -35,6 +35,7 @@ public class TradeInteractor implements TradeInputBoundary {
     @Override
     public void execute(TradeRequestModel requestModel) {
         String symbol = requestModel.getSymbol();
+        System.out.println("TradeInteractor: Received symbol from request model: '" + symbol + "'");
         
         if (symbol == null || symbol.trim().isEmpty()) {
             tradePresenter.prepareFailView("Please enter a symbol.");
@@ -42,10 +43,13 @@ public class TradeInteractor implements TradeInputBoundary {
         }
         
         symbol = symbol.trim();
+        System.out.println("TradeInteractor: Calling tradeDataAccess.connect with symbol: '" + symbol + "'");
         
         try {
             tradeDataAccess.connect(symbol, internalListener);
         } catch (Exception e) {
+            System.err.println("TradeInteractor: Error connecting: " + e.getMessage());
+            e.printStackTrace();
             tradePresenter.prepareFailView("Unable to connect to trade feed. " + e.getMessage());
         }
     }
