@@ -64,12 +64,17 @@ public class AccountView extends JPanel implements PropertyChangeListener {
 
         for (JSONObject item : watchlist) {
             if (item == null) continue;
+            final JSONObject itemToRemove = item;
 
             String text = null;
-            if (item.has("stock")) {
-                text = item.getString("stock");
-            } else if (item.has("info")) {
-                text = item.getString("info");
+            for (String key : item.keySet()) {
+                if (item.get(key) instanceof String) {
+                    String value = item.getString(key).trim();
+                    if (!value.isEmpty()) {
+                        text = value;
+                        break;
+                    }
+                }
             }
 
             if (text != null && !text.isEmpty()) {
@@ -78,6 +83,16 @@ public class AccountView extends JPanel implements PropertyChangeListener {
 
                 JLabel stockLabel = new JLabel(text);
                 itemPanel.add(stockLabel);
+
+                JButton removeButton = new JButton("Remove");
+
+                removeButton.addActionListener(e -> {
+                    String username = viewModel.getState().getUsername();
+                    System.out.println(username);
+                    accountController.removeFromWatchlist(username, itemToRemove);
+                });
+
+                itemPanel.add(removeButton);
 
                 watchlistPanel.add(itemPanel);
             }

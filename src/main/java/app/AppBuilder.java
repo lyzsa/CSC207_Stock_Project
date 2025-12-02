@@ -11,10 +11,7 @@ import use_case.earnings_history.EarningsDataAccessInterface;
 import use_case.earnings_history.GetEarningsHistoryInputBoundary;
 import use_case.earnings_history.GetEarningsHistoryInteractor;
 import use_case.earnings_history.GetEarningsHistoryOutputBoundary;
-import use_case.watchlist.WatchlistInputBoundary;
-import use_case.watchlist.WatchlistInteractor;
-import use_case.watchlist.WatchlistOutputBoundary;
-import use_case.watchlist.WatchlistUserDataAccessInterface;
+import use_case.watchlist.*;
 import view.EarningsHistoryView;
 
 import data_access.FileUserDataAccessObject;
@@ -279,7 +276,9 @@ public class AppBuilder {
                 new AccountPresenter(accountViewModel);
         WatchlistInputBoundary watchlistInteractor =
                 new WatchlistInteractor(watchlistDataAccessObject, watchlistPresenter);
-        AccountController accountController = new AccountController(watchlistInteractor);
+        RemoveWatchlistInputBoundary removeInteractor =
+                new RemoveWatchlistInteractor(watchlistDataAccessObject, watchlistPresenter);
+        AccountController accountController = new AccountController(watchlistInteractor, removeInteractor);
 
         accountView = new AccountView(accountViewModel);
         accountView.setController(accountController);

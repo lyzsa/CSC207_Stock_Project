@@ -11,7 +11,7 @@ public class User {
 
     private final String name;
     private final String password;
-    private final ArrayList<JSONObject> watchlist = new ArrayList<>();
+    private ArrayList<JSONObject> watchlist = new ArrayList<>();
 
     /**
      * Creates a new user with the given non-empty name and non-empty password.
@@ -39,5 +39,9 @@ public class User {
     }
 
     public ArrayList<JSONObject> getWatchlist() { return watchlist; }
+
+    public void setWatchlist(ArrayList<JSONObject> watchlist) {
+        this.watchlist = watchlist;
+    }
 
 }

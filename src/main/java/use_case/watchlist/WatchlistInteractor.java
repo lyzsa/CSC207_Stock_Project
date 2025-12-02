@@ -26,7 +26,7 @@ public class WatchlistInteractor implements WatchlistInputBoundary {
 
         wlUserDataAccessObject.save(user);
 
-        watchlistPresenter.prepareSuccessView(
+        watchlistPresenter.prepareSuccessView(username,
                 new WatchlistOutputData(user.getWatchlist())
         );
     }
