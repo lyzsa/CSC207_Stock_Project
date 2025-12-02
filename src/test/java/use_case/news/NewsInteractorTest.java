@@ -198,4 +198,43 @@ public class NewsInteractorTest {
         assertTrue(presenter.lastError.contains("No news found for symbol"),
                 "Should report no news found");
     }
+
+    @Test
+    void executeMarketNews_noArticles_triggersFailView() {
+        InMemoryNewsDao dao = new InMemoryNewsDao();
+        RecordingPresenter presenter = new RecordingPresenter();
+
+        // simulate "no market news"
+        dao.marketNewsToReturn = List.of();   // or null if you want to cover that
+
+        NewsInteractor interactor = new NewsInteractor(dao, presenter);
+        NewsRequestModel request = new NewsRequestModel();
+
+        interactor.executeMarketNews(request);
+
+        assertNull(presenter.lastSuccess, "No success response expected");
+        assertNotNull(presenter.lastError, "Error should be reported");
+        assertTrue(presenter.lastError.contains("No market news available"),
+                "Error message should mention no market news");
+    }
+
+    @Test
+    void executeCompanyNews_daoThrows_triggersFailView() {
+        InMemoryNewsDao dao = new InMemoryNewsDao();
+        RecordingPresenter presenter = new RecordingPresenter();
+
+        dao.throwOnCompany = true;
+
+        NewsInteractor interactor = new NewsInteractor(dao, presenter);
+
+        NewsRequestModel request =
+                new NewsRequestModel("AAPL", "2024-01-01", "2024-01-31");
+
+        interactor.executeCompanyNews(request);
+
+        assertNull(presenter.lastSuccess, "No success response expected");
+        assertNotNull(presenter.lastError, "Error should be reported");
+        assertTrue(presenter.lastError.contains("Unable to load company news"),
+                "Error message should mention inability to load company news");
+    }
 }
