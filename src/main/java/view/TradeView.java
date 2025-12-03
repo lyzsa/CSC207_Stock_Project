@@ -36,7 +36,6 @@ public class TradeView extends JPanel implements PropertyChangeListener {
     private final JLabel timestampLabel = new JLabel("---");
     private final JLabel statusLabel = new JLabel("Status: Disconnected", SwingConstants.CENTER);
     private final JTextField symbolInputField = new JTextField(20);
-    private JLabel symbolTypeLabel; // Label to show symbol type (Stock/Crypto)
     private JButton connectButton;
     private JButton disconnectButton;
     private String currentSymbol = "";
@@ -93,36 +92,7 @@ public class TradeView extends JPanel implements PropertyChangeListener {
         searchPanel.add(new JLabel("Symbol:"));
         symbolInputField.setText("BINANCE:BTCUSDT"); // Default value
         symbolInputField.setToolTipText("Enter crypto pair (e.g., BINANCE:BTCUSDT) or stock symbol (e.g., AAPL)");
-        
-        // Add listener to detect symbol type as user types
-        symbolInputField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
-            @Override
-            public void insertUpdate(javax.swing.event.DocumentEvent e) {
-                updateSymbolTypeIndicator();
-            }
-            
-            @Override
-            public void removeUpdate(javax.swing.event.DocumentEvent e) {
-                updateSymbolTypeIndicator();
-            }
-            
-            @Override
-            public void changedUpdate(javax.swing.event.DocumentEvent e) {
-                updateSymbolTypeIndicator();
-            }
-        });
-        
         searchPanel.add(symbolInputField);
-        
-        // Symbol type indicator label
-        JLabel symbolTypeLabel = new JLabel("");
-        symbolTypeLabel.setFont(new Font("Arial", Font.ITALIC, 11));
-        symbolTypeLabel.setForeground(Color.GRAY);
-        searchPanel.add(symbolTypeLabel);
-        this.symbolTypeLabel = symbolTypeLabel; // Store reference for updates
-
-        // Initialize symbol type indicator
-        updateSymbolTypeIndicator();
         connectButton = new JButton("Connect");
         connectButton.addActionListener(e -> onConnectClicked());
         searchPanel.add(connectButton);
@@ -208,32 +178,6 @@ public class TradeView extends JPanel implements PropertyChangeListener {
     }
     
     /**
-     * Updates the symbol type indicator label based on current input.
-     */
-    private void updateSymbolTypeIndicator() {
-        if (symbolTypeLabel == null) {
-            return;
-        }
-        
-        String symbol = symbolInputField.getText().trim();
-        String symbolType = detectSymbolType(symbol);
-        
-        switch (symbolType) {
-            case "Crypto":
-                symbolTypeLabel.setText("(Crypto)");
-                symbolTypeLabel.setForeground(new Color(0, 150, 0)); // Green
-                break;
-            case "Stock":
-                symbolTypeLabel.setText("(Stock)");
-                symbolTypeLabel.setForeground(new Color(200, 100, 0)); // Orange
-                break;
-            default:
-                symbolTypeLabel.setText("");
-                break;
-        }
-    }
-
-    /**
      * Handles the Connect button click by delegating to the Controller.
      */
     private void onConnectClicked() {
@@ -271,7 +215,6 @@ public class TradeView extends JPanel implements PropertyChangeListener {
             int result = JOptionPane.showConfirmDialog(
                 this,
                 "Stock symbols (like AAPL, TSLA) may not have real-time trade data available.\n\n" +
-                "Crypto pairs (like BINANCE:BTCUSDT) work best for real-time trades.\n\n" +
                 "Do you want to continue with '" + symbol + "'?",
                 "Symbol Warning",
                 JOptionPane.YES_NO_OPTION,
