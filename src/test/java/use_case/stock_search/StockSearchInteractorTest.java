@@ -101,20 +101,16 @@ class StockSearchInteractorTest {
 
         StockSearchRequestModel request = new StockSearchRequestModel("   ");
 
-        // Act
         interactor.execute(request);
 
-        // Assert: DAO should not be called
         assertNull(dao.lastSymbol);
 
-        // Assert: error message from presenter
         assertNull(presenter.lastSuccess);
         assertEquals("Please enter a symbol.", presenter.lastError);
     }
 
     @Test
     void execute_daoThrowsException_reportsError() throws Exception {
-        // Arrange
         InMemoryStockSearchDao dao = new InMemoryStockSearchDao();
         RecordingPresenter presenter = new RecordingPresenter();
         dao.throwOnLoad = true;
@@ -123,10 +119,8 @@ class StockSearchInteractorTest {
 
         StockSearchRequestModel request = new StockSearchRequestModel("AAPL");
 
-        // Act
         interactor.execute(request);
 
-        // Assert: presenter should receive an error message
         assertNull(presenter.lastSuccess);
         assertNotNull(presenter.lastError);
         assertTrue(presenter.lastError.startsWith("Unable to load quote."));
