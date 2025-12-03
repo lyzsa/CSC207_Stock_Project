@@ -171,8 +171,7 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
             System.out.println("watchlist button clicked");
             if (accountController != null) {
                 JSONObject newItem = new JSONObject();
-//                newItem.put("stock", stockSymbol);
-                newItem.put("info", stockInfoArea.getText());
+                newItem.put(searchStockField.getText().toUpperCase(), stockInfoArea.getText());
                 accountController.addToWatchlist(username, newItem);
             }
         });

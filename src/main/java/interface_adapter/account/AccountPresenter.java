@@ -13,10 +13,11 @@ public class AccountPresenter implements WatchlistOutputBoundary {
         this.viewModel = viewModel;
     }
 
-    public void prepareSuccessView(WatchlistOutputData watchlistOutputData) {
+    public void prepareSuccessView(String username, WatchlistOutputData watchlistOutputData) {
         AccountState state = viewModel.getState();
         state.setWatchlist(watchlistOutputData.getWatchlist());
         viewModel.setState(state);
+        state.setUsername(username);
         viewModel.firePropertyChange();
     }
 
