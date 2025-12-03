@@ -19,7 +19,14 @@ import java.util.concurrent.TimeUnit;
 public class FinnhubTradeDataAccessObject implements TradeDataAccessInterface {
 
     private static final String API_KEY = "d4977ehr01qshn3kvpt0d4977ehr01qshn3kvptg";
-    private static final String WEB_SOCKET_URL = "wss://ws.finnhub.io?token=" + API_KEY;
+    private static final String WEB_SOCKET_URL = "wss://ws.finnhub.io?token="
+            + API_KEY;
+    private static final int UNSUBSCRIBE_DELAY_MS = 100;
+    private static final int RECONNECT_DELAY_MS = 200;
+    private static final int CLOSE_CODE_NORMAL = 1000;
+    private static final int CONNECT_TIMEOUT_SECONDS = 10;
+    private static final int PING_INTERVAL_SECONDS = 25;
+    private static final int DATA_ARRAY_OFFSET = 8;
 
     private WebSocket webSocket;
     private OkHttpClient client;
@@ -38,10 +45,12 @@ public class FinnhubTradeDataAccessObject implements TradeDataAccessInterface {
         if (webSocket != null) {
             if (currentSymbol != null && !currentSymbol.isEmpty()) {
                 try {
-                    String unsubscribeMsg = String.format("{\"type\":\"unsubscribe\",\"symbol\":\"%s\"}", currentSymbol);
+                    String unsubscribeMsg = String.format(
+                            "{\"type\":\"unsubscribe\",\"symbol\":\"%s\"}",
+                            currentSymbol);
                     webSocket.send(unsubscribeMsg);
                     try {
-                        Thread.sleep(100);
+                        Thread.sleep(UNSUBSCRIBE_DELAY_MS);
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                     }
@@ -49,10 +58,10 @@ public class FinnhubTradeDataAccessObject implements TradeDataAccessInterface {
                     // Error unsubscribing
                 }
             }
-            webSocket.close(1000, "Reconnecting");
+            webSocket.close(CLOSE_CODE_NORMAL, "Reconnecting");
             webSocket = null;
             try {
-                Thread.sleep(200);
+                Thread.sleep(RECONNECT_DELAY_MS);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
@@ -67,8 +76,8 @@ public class FinnhubTradeDataAccessObject implements TradeDataAccessInterface {
 
         client = new OkHttpClient.Builder()
                 .readTimeout(0, TimeUnit.MILLISECONDS)
-                .connectTimeout(10, TimeUnit.SECONDS)
-                .pingInterval(25, TimeUnit.SECONDS) // Finnhub often sends pings - keep connection alive
+                .connectTimeout(CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                .pingInterval(PING_INTERVAL_SECONDS, TimeUnit.SECONDS)
                 .build();
 
         Request request = new Request.Builder().url(WEB_SOCKET_URL).build();
@@ -80,7 +89,9 @@ public class FinnhubTradeDataAccessObject implements TradeDataAccessInterface {
         webSocket = client.newWebSocket(request, new WebSocketListener() {
             @Override
             public void onOpen(WebSocket ws, Response response) {
-                String subscribeMsg = String.format("{\"type\":\"subscribe\",\"symbol\":\"%s\"}", currentSymbol);
+                String subscribeMsg = String.format(
+                        "{\"type\":\"subscribe\",\"symbol\":\"%s\"}",
+                        currentSymbol);
                 ws.send(subscribeMsg);
             }
 
@@ -96,10 +107,12 @@ public class FinnhubTradeDataAccessObject implements TradeDataAccessInterface {
         if (webSocket != null) {
             if (currentSymbol != null && !currentSymbol.isEmpty()) {
                 try {
-                    String unsubscribeMsg = String.format("{\"type\":\"unsubscribe\",\"symbol\":\"%s\"}", currentSymbol);
+                    String unsubscribeMsg = String.format(
+                            "{\"type\":\"unsubscribe\",\"symbol\":\"%s\"}",
+                            currentSymbol);
                     webSocket.send(unsubscribeMsg);
                     try {
-                        Thread.sleep(100);
+                        Thread.sleep(UNSUBSCRIBE_DELAY_MS);
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                     }
@@ -107,7 +120,7 @@ public class FinnhubTradeDataAccessObject implements TradeDataAccessInterface {
                     // Error unsubscribing
                 }
             }
-            webSocket.close(1000, "User disconnect");
+            webSocket.close(CLOSE_CODE_NORMAL, "User disconnect");
             webSocket = null;
         }
         client = null;
@@ -137,15 +150,22 @@ public class FinnhubTradeDataAccessObject implements TradeDataAccessInterface {
             }
         } else {
             int valueEnd = valueStart;
-            while (valueEnd < json.length() && (Character.isDigit(json.charAt(valueEnd)) || json.charAt(valueEnd) == '.' || json.charAt(valueEnd) == '-')) {
+            while (valueEnd < json.length()
+                    && (Character.isDigit(json.charAt(valueEnd))
+                    || json.charAt(valueEnd) == '.'
+                    || json.charAt(valueEnd) == '-')) {
                 valueEnd++;
             }
             int commaIndex = json.indexOf(',', valueStart);
             int braceIndex = json.indexOf('}', valueStart);
 
             int terminationIndex = json.length();
-            if (commaIndex != -1) terminationIndex = Math.min(terminationIndex, commaIndex);
-            if (braceIndex != -1) terminationIndex = Math.min(terminationIndex, braceIndex);
+            if (commaIndex != -1) {
+                terminationIndex = Math.min(terminationIndex, commaIndex);
+            }
+            if (braceIndex != -1) {
+                terminationIndex = Math.min(terminationIndex, braceIndex);
+            }
 
             if (terminationIndex > valueStart) {
                 return json.substring(valueStart, terminationIndex).trim();
@@ -163,19 +183,26 @@ public class FinnhubTradeDataAccessObject implements TradeDataAccessInterface {
         try {
             String dataArray = null;
             if (jsonMessage.contains("\"data\":[")) {
-                int dataStart = jsonMessage.indexOf("\"data\":[") + 8;
+                int dataStart = jsonMessage.indexOf("\"data\":[")
+                        + DATA_ARRAY_OFFSET;
                 int bracketCount = 1;
                 int dataEnd = dataStart;
                 while (dataEnd < jsonMessage.length() && bracketCount > 0) {
-                    if (jsonMessage.charAt(dataEnd) == '[') bracketCount++;
-                    if (jsonMessage.charAt(dataEnd) == ']') bracketCount--;
+                    if (jsonMessage.charAt(dataEnd) == '[') {
+                        bracketCount++;
+                    }
+                    if (jsonMessage.charAt(dataEnd) == ']') {
+                        bracketCount--;
+                    }
                     dataEnd++;
                 }
                 if (bracketCount == 0) {
                     dataArray = jsonMessage.substring(dataStart, dataEnd - 1);
                 }
             } else if (jsonMessage.trim().startsWith("[")) {
-                dataArray = jsonMessage.trim().substring(1, jsonMessage.trim().length() - 1);
+                String trimmedMessage = jsonMessage.trim();
+                dataArray = trimmedMessage.substring(1,
+                        trimmedMessage.length() - 1);
             }
 
             if (dataArray == null || dataArray.isEmpty()) {
@@ -196,8 +223,10 @@ public class FinnhubTradeDataAccessObject implements TradeDataAccessInterface {
                 String normalizedReceivedSymbol = (symbol != null) ? symbol.trim() : null;
                 String normalizedCurrentSymbol = (currentSymbol != null) ? currentSymbol.trim() : null;
 
-                if (normalizedCurrentSymbol != null && normalizedReceivedSymbol != null &&
-                    normalizedCurrentSymbol.equalsIgnoreCase(normalizedReceivedSymbol)) {
+                if (normalizedCurrentSymbol != null
+                        && normalizedReceivedSymbol != null
+                        && normalizedCurrentSymbol
+                        .equalsIgnoreCase(normalizedReceivedSymbol)) {
 
                     String priceStr = extractValue(tradeObj, "p");
                     double price = (priceStr != null) ? Double.parseDouble(priceStr) : 0.0;
@@ -211,7 +240,8 @@ public class FinnhubTradeDataAccessObject implements TradeDataAccessInterface {
                     Instant ts = timestamp > 0 ? Instant.ofEpochMilli(timestamp) : null;
 
                     if (listener != null) {
-                        listener.onStatusChanged("Status: Connected to " + currentSymbol, false);
+                        listener.onStatusChanged("Status: Connected to "
+                                + currentSymbol, false);
                         Trade trade = new Trade(symbol, price, volume, ts);
                         listener.onTrade(trade);
                     }
@@ -274,13 +304,12 @@ public class FinnhubTradeDataAccessObject implements TradeDataAccessInterface {
 
 
                 if (listener != null) {
-                    listener.onStatusChanged("Status: Connected to " + currentSymbol, false);
+                    listener.onStatusChanged("Status: Connected to "
+                            + currentSymbol, false);
                     Trade trade = new Trade(symbol, price, volume, ts);
                     listener.onTrade(trade);
                 }
-            } 
-
-            else if (jsonMessage.contains("\"type\":\"error\"")) {
+            } else if (jsonMessage.contains("\"type\":\"error\"")) {
                 String errorMsg = extractValue(jsonMessage, "msg");
                 if (listener != null) {
                     String errorText = errorMsg != null ? errorMsg : "Unknown error";
@@ -288,7 +317,9 @@ public class FinnhubTradeDataAccessObject implements TradeDataAccessInterface {
                 }
             } else {
                 // Check if it might be an array format we missed
-                if (jsonMessage.trim().startsWith("[") && jsonMessage.contains("\"s\"") && jsonMessage.contains("\"p\"")) {
+                if (jsonMessage.trim().startsWith("[")
+                        && jsonMessage.contains("\"s\"")
+                        && jsonMessage.contains("\"p\"")) {
                     processTradeArray(jsonMessage);
                 }
             }

@@ -43,7 +43,14 @@ public class TradeView extends JPanel implements PropertyChangeListener {
     private long lastConnectionAttemptTime = 0;
     private boolean isConnected = false;
     private static final long SYMBOL_NOT_FOUND_TIMEOUT = 10000; // 10 seconds
-    private static final long CONNECTION_COOLDOWN_MS = 5000; // 5 seconds between connection attempts
+    private static final long CONNECTION_COOLDOWN_MS = 5000; // 5 seconds
+    private static final int DISCONNECT_DELAY_MS = 300;
+    private static final int ONE_SECOND_MS = 1000;
+    private static final int MILLISECONDS_PER_SECOND = 1000;
+    private static final String STATUS_CONNECTED = "Connected";
+    private static final String STATUS_CONNECTING = "Connecting";
+    private static final String STATUS_DISCONNECTED = "Disconnected";
+    private static final String CRYPTO_PAIR_EXAMPLE = "BINANCE:BTCUSDT";
 
     /**
      * Initializes the GUI components.
@@ -90,8 +97,9 @@ public class TradeView extends JPanel implements PropertyChangeListener {
         // Search panel at top with Connect and Disconnect buttons
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
         searchPanel.add(new JLabel("Symbol:"));
-        symbolInputField.setText("BINANCE:BTCUSDT"); // Default value
-        symbolInputField.setToolTipText("Enter crypto pair (e.g., BINANCE:BTCUSDT) or stock symbol (e.g., AAPL)");
+        symbolInputField.setText(CRYPTO_PAIR_EXAMPLE);
+        symbolInputField.setToolTipText("Enter crypto pair (e.g., "
+                + CRYPTO_PAIR_EXAMPLE + ") or stock symbol (e.g., AAPL)");
         searchPanel.add(symbolInputField);
         connectButton = new JButton("Connect");
         connectButton.addActionListener(e -> onConnectClicked());
@@ -156,12 +164,14 @@ public class TradeView extends JPanel implements PropertyChangeListener {
                 String pair = parts[1];
                 
                 // Common crypto exchanges
-                if (exchange.equals("BINANCE") || exchange.equals("COINBASE") || 
-                    exchange.equals("KRAKEN") || exchange.equals("BITSTAMP") ||
-                    exchange.equals("BITFINEX") || exchange.equals("GEMINI")) {
-                    // Check if pair looks like a crypto pair (usually ends with USD, USDT, EUR, etc.)
-                    if (pair.endsWith("USD") || pair.endsWith("USDT") || pair.endsWith("EUR") ||
-                        pair.endsWith("BTC") || pair.endsWith("ETH") || pair.length() >= 6) {
+                if (exchange.equals("BINANCE") || exchange.equals("COINBASE")
+                        || exchange.equals("KRAKEN") || exchange.equals("BITSTAMP")
+                        || exchange.equals("BITFINEX") || exchange.equals("GEMINI")) {
+                    // Check if pair looks like a crypto pair
+                    // (usually ends with USD, USDT, EUR, etc.)
+                    if (pair.endsWith("USD") || pair.endsWith("USDT")
+                            || pair.endsWith("EUR") || pair.endsWith("BTC")
+                            || pair.endsWith("ETH") || pair.length() >= 6) {
                         return "Crypto";
                     }
                 }
@@ -198,28 +208,31 @@ public class TradeView extends JPanel implements PropertyChangeListener {
                 if (marketStatusText == null) {
                     marketStatusText = "Market is closed";
                 }
+                String message = "Cannot connect to stock symbol '"
+                        + symbol + "' because the market is closed.\n\n"
+                        + "Market Status: " + marketStatusText + "\n\n"
+                        + "Please try:\n"
+                        + "• Wait until the market opens\n"
+                        + "• Use a cryptocurrency pair instead (e.g., "
+                        + CRYPTO_PAIR_EXAMPLE + ")";
                 JOptionPane.showMessageDialog(
-                    this,
-                    "Cannot connect to stock symbol '" + symbol + "' because the market is closed.\n\n" +
-                    "Market Status: " + marketStatusText + "\n\n" +
-                    "Please try:\n" +
-                    "• Wait until the market opens\n" +
-                    "• Use a cryptocurrency pair instead (e.g., BINANCE:BTCUSDT)",
-                    "Market Closed",
-                    JOptionPane.WARNING_MESSAGE
-                );
+                        this,
+                        message,
+                        "Market Closed",
+                        JOptionPane.WARNING_MESSAGE);
                 return;
             }
             
             // Warn user if they're using a stock symbol (not crypto)
+            String warningMessage = "Stock symbols (like AAPL, TSLA) "
+                    + "may not have real-time trade data available.\n\n"
+                    + "Do you want to continue with '" + symbol + "'?";
             int result = JOptionPane.showConfirmDialog(
-                this,
-                "Stock symbols (like AAPL, TSLA) may not have real-time trade data available.\n\n" +
-                "Do you want to continue with '" + symbol + "'?",
-                "Symbol Warning",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE
-            );
+                    this,
+                    warningMessage,
+                    "Symbol Warning",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.NO_OPTION) {
                 return;
             }
@@ -230,52 +243,47 @@ public class TradeView extends JPanel implements PropertyChangeListener {
         long timeSinceLastAttempt = currentTime - lastConnectionAttemptTime;
         
         if (timeSinceLastAttempt < CONNECTION_COOLDOWN_MS) {
-            long remainingTime = (CONNECTION_COOLDOWN_MS - timeSinceLastAttempt) / 1000;
+            long remainingTime = (CONNECTION_COOLDOWN_MS - timeSinceLastAttempt)
+                    / MILLISECONDS_PER_SECOND;
+            String rateLimitMessage = "Please wait " + remainingTime
+                    + " second(s) before connecting again.\n"
+                    + "Too many requests may result in rate limiting.";
             JOptionPane.showMessageDialog(
-                this,
-                "Please wait " + remainingTime + " second(s) before connecting again.\nToo many requests may result in rate limiting.",
-                "Rate Limit",
-                JOptionPane.WARNING_MESSAGE
-            );
+                    this,
+                    rateLimitMessage,
+                    "Rate Limit",
+                    JOptionPane.WARNING_MESSAGE);
             return;
         }
-        
-        // Always disconnect first to ensure clean state
+
         if (isConnected || connectionStartTime > 0) {
             tradeController.disconnect();
-            // Reset state immediately
             isConnected = false;
             connectionStartTime = 0;
-            // Give a delay for disconnect to complete
             try {
-                Thread.sleep(300);
+                Thread.sleep(DISCONNECT_DELAY_MS);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }
-        
-        // Update last connection attempt time
+
         lastConnectionAttemptTime = currentTime;
-        
-        // Reset state and set new connection start time
+
         currentSymbol = symbol;
         connectionStartTime = System.currentTimeMillis();
         symbolLabel.setText("---");
         priceLabel.setText("---");
         volumeLabel.setText("---");
         timestampLabel.setText("---");
-        
-        // Disable connect button during connection attempt, enable disconnect button
+
         connectButton.setEnabled(false);
         disconnectButton.setEnabled(true);
-        
-        // Immediately show "Connecting..." while we wait for the first trade.
+
         statusLabel.setText("Status: Connecting...");
         statusLabel.setForeground(Color.ORANGE);
-        
-        // Execute through controller
+
         tradeController.execute(symbol);
-        
+
         // Start a timeout check for symbol not found
         startSymbolNotFoundCheck();
     }
@@ -284,10 +292,7 @@ public class TradeView extends JPanel implements PropertyChangeListener {
      * Handles the Disconnect button click.
      */
     private void onDisconnectClicked() {
-        // Disconnect through controller
         tradeController.disconnect();
-        
-        // Reset all info to default
         resetToDefault();
     }
     
@@ -295,20 +300,17 @@ public class TradeView extends JPanel implements PropertyChangeListener {
      * Resets all information to default values.
      */
     private void resetToDefault() {
-        // Reset connection state
         isConnected = false;
         connectionStartTime = 0;
         currentSymbol = "";
-        
-        // Reset UI labels to default
+
         symbolLabel.setText("---");
         priceLabel.setText("---");
         volumeLabel.setText("---");
         timestampLabel.setText("---");
         statusLabel.setText("Status: Disconnected");
         statusLabel.setForeground(Color.BLACK);
-        
-        // Reset button states
+
         connectButton.setEnabled(true);
         disconnectButton.setEnabled(false);
         connectButton.setText("Connect");
@@ -318,7 +320,6 @@ public class TradeView extends JPanel implements PropertyChangeListener {
      * Starts a background thread to check if symbol is not found after timeout.
      */
     private void startSymbolNotFoundCheck() {
-        // Capture the connection start time and symbol for this specific connection attempt
         final long checkStartTime = connectionStartTime;
         final String checkSymbol = currentSymbol;
         
@@ -326,41 +327,46 @@ public class TradeView extends JPanel implements PropertyChangeListener {
             try {
                 Thread.sleep(SYMBOL_NOT_FOUND_TIMEOUT);
                 SwingUtilities.invokeLater(() -> {
-                    // Only trigger timeout if:
-                    // 1. We're still checking the same symbol
-                    // 2. The connection start time hasn't changed (no new connection started)
-                    // 3. Enough time has passed since connection started
-                    // 4. No trades have been received (symbol label still shows "---")
                     long currentTime = System.currentTimeMillis();
-                    if (checkSymbol.equals(currentSymbol) && 
-                        connectionStartTime == checkStartTime &&
-                        connectionStartTime > 0 &&
-                        currentTime - connectionStartTime >= SYMBOL_NOT_FOUND_TIMEOUT &&
-                        symbolLabel.getText().equals("---")) {
-                            // No trades received - could be symbol not found or rate limiting
-                            boolean isCrypto = currentSymbol.contains(":") && currentSymbol.toUpperCase().startsWith("BINANCE:");
-                            String message = "Connection timeout: Symbol '" + currentSymbol + "' not found or no trades available.\n\n";
+                    if (checkSymbol.equals(currentSymbol)
+                            && connectionStartTime == checkStartTime
+                            && connectionStartTime > 0
+                            && currentTime - connectionStartTime
+                            >= SYMBOL_NOT_FOUND_TIMEOUT
+                            && symbolLabel.getText().equals("---")) {
+                            // No trades received - could be symbol not found
+                            // or rate limiting
+                            boolean isCrypto = currentSymbol.contains(":")
+                                    && currentSymbol.toUpperCase()
+                                    .startsWith("BINANCE:");
+                            String message = "Connection timeout: Symbol '"
+                                    + currentSymbol
+                                    + "' not found or no trades available.\n\n";
                             if (!isCrypto) {
-                                message += "⚠️ IMPORTANT: Stock symbols (like AAPL, TSLA) typically do NOT have real-time trade data on Finnhub.\n" +
-                                          "The WebSocket trade feed primarily supports CRYPTO pairs.\n\n";
+                                message += "⚠️ IMPORTANT: Stock symbols "
+                                        + "(like AAPL, TSLA) typically do NOT "
+                                        + "have real-time trade data on Finnhub.\n"
+                                        + "The WebSocket trade feed primarily "
+                                        + "supports CRYPTO pairs.\n\n";
                             }
-                            message += "This may also occur if:\n" +
-                                      "• Requests are made too frequently (rate limiting)\n" +
-                                      "• The symbol format is incorrect\n" +
-                                      "• The market is closed\n\n" +
-                                      "✅ RECOMMENDED: Use crypto pairs like:\n" +
-                                      "   • BINANCE:BTCUSDT\n" +
-                                      "   • BINANCE:ETHUSDT\n" +
-                                      "   • BINANCE:BNBUSDT\n\n" +
-                                      "Please wait " + (CONNECTION_COOLDOWN_MS / 1000) + 
-                                      " seconds before trying again.";
-                            
+                            message += "This may also occur if:\n"
+                                    + "• Requests are made too frequently "
+                                    + "(rate limiting)\n"
+                                    + "• The symbol format is incorrect\n"
+                                    + "• The market is closed\n\n"
+                                    + "✅ RECOMMENDED: Use crypto pairs like:\n"
+                                    + "   • BINANCE:BTCUSDT\n"
+                                    + "   • BINANCE:ETHUSDT\n"
+                                    + "   • BINANCE:BNBUSDT\n\n"
+                                    + "Please wait "
+                                    + (CONNECTION_COOLDOWN_MS / MILLISECONDS_PER_SECOND)
+                                    + " seconds before trying again.";
+
                             JOptionPane.showMessageDialog(
-                                TradeView.this,
-                                message,
-                                "Connection Error",
-                                JOptionPane.ERROR_MESSAGE
-                            );
+                                    TradeView.this,
+                                    message,
+                                    "Connection Error",
+                                    JOptionPane.ERROR_MESSAGE);
                             statusLabel.setText("Status: Connection failed");
                             statusLabel.setForeground(Color.RED);
                             tradeController.disconnect();
@@ -383,14 +389,17 @@ public class TradeView extends JPanel implements PropertyChangeListener {
         connectButton.setEnabled(false);
         new Thread(() -> {
             try {
-                for (int remaining = (int)(CONNECTION_COOLDOWN_MS / 1000); remaining > 0; remaining--) {
+                int cooldownSeconds = (int) (CONNECTION_COOLDOWN_MS
+                        / MILLISECONDS_PER_SECOND);
+                for (int remaining = cooldownSeconds; remaining > 0; remaining--) {
                     final int seconds = remaining;
                     SwingUtilities.invokeLater(() -> {
                         connectButton.setText("Wait " + seconds + "s");
-                        statusLabel.setText("Status: Rate limited - wait " + seconds + " second(s)");
+                        statusLabel.setText("Status: Rate limited - wait "
+                                + seconds + " second(s)");
                         statusLabel.setForeground(Color.ORANGE);
                     });
-                    Thread.sleep(1000);
+                    Thread.sleep(ONE_SECOND_MS);
                 }
                 SwingUtilities.invokeLater(() -> {
                     connectButton.setText("Connect");
@@ -457,43 +466,56 @@ public class TradeView extends JPanel implements PropertyChangeListener {
                 isConnected = false;
                 
                 // Combined error handling for rate limiting and symbol not found
-                boolean isRateLimit = statusText.contains("429") || statusText.contains("Too Many Requests") || statusText.contains("Rate limit");
-                boolean isOtherError = statusText.contains("Error") || statusText.contains("Failure");
-                
+                boolean isRateLimit = statusText.contains("429")
+                        || statusText.contains("Too Many Requests")
+                        || statusText.contains("Rate limit");
+                boolean isOtherError = statusText.contains("Error")
+                        || statusText.contains("Failure");
+
                 if (isRateLimit || isOtherError) {
                     String message;
+                    long cooldownSeconds = CONNECTION_COOLDOWN_MS
+                            / MILLISECONDS_PER_SECOND;
                     if (isRateLimit) {
-                        message = "Connection failed: Too Many Requests (429).\n" +
-                                  "This may also occur if the symbol '" + currentSymbol + "' is invalid.\n\n" +
-                                  "Please wait " + (CONNECTION_COOLDOWN_MS / 1000) + 
-                                  " seconds before trying again.\n" +
-                                  "If the problem persists, please verify the symbol is correct.";
+                        message = "Connection failed: Too Many Requests (429).\n"
+                                + "This may also occur if the symbol '"
+                                + currentSymbol + "' is invalid.\n\n"
+                                + "Please wait " + cooldownSeconds
+                                + " seconds before trying again.\n"
+                                + "If the problem persists, please verify "
+                                + "the symbol is correct.";
                         // Enforce cooldown after 429 error
                         lastConnectionAttemptTime = System.currentTimeMillis();
                         startCooldownTimer();
                     } else {
-                        message = "Connection failed: Symbol '" + currentSymbol + "' not found or invalid.\n" +
-                                  "This may also occur if requests are made too frequently.\n\n" +
-                                  "Please wait " + (CONNECTION_COOLDOWN_MS / 1000) + 
-                                  " seconds before trying again.\n" +
-                                  "If the problem persists, please verify the symbol is correct.";
+                        message = "Connection failed: Symbol '"
+                                + currentSymbol
+                                + "' not found or invalid.\n"
+                                + "This may also occur if requests are made "
+                                + "too frequently.\n\n"
+                                + "Please wait " + cooldownSeconds
+                                + " seconds before trying again.\n"
+                                + "If the problem persists, please verify "
+                                + "the symbol is correct.";
                         // Enforce cooldown for other errors too
                         lastConnectionAttemptTime = System.currentTimeMillis();
                         startCooldownTimer();
                     }
-                    
+
                     JOptionPane.showMessageDialog(
-                        TradeView.this,
-                        message,
-                        "Connection Error",
-                        JOptionPane.ERROR_MESSAGE
-                    );
+                            TradeView.this,
+                            message,
+                            "Connection Error",
+                            JOptionPane.ERROR_MESSAGE);
                 }
-            } else if (statusText != null && statusText.contains("Connected")) {
+            } else if (statusText != null
+                    && statusText.contains(STATUS_CONNECTED)) {
                 statusLabel.setForeground(new Color(0, 128, 0));
-            } else if (statusText != null && statusText.contains("Connecting")) {
+            } else if (statusText != null
+                    && statusText.contains(STATUS_CONNECTING)) {
                 statusLabel.setForeground(Color.ORANGE);
-            } else if (statusText != null && statusText.contains("Disconnected")) {
+            } else if (statusText != null
+                    && statusText.contains(STATUS_DISCONNECTED)) {
                 statusLabel.setForeground(Color.BLACK);
                 // On disconnect, reset button states
                 connectButton.setEnabled(true);
