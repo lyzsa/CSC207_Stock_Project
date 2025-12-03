@@ -11,16 +11,12 @@ import use_case.trade.TradeListener;
 
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Finnhub-specific implementation of the TradeDataAccessInterface.
  * This class belongs to the data_access / infrastructure layer and knows about WebSockets and JSON format.
  */
 public class FinnhubTradeDataAccessObject implements TradeDataAccessInterface {
-
-    private static final Logger LOGGER = Logger.getLogger(FinnhubTradeDataAccessObject.class.getName());
 
     private static final String API_KEY = "d4977ehr01qshn3kvpt0d4977ehr01qshn3kvptg";
     private static final String WEB_SOCKET_URL = "wss://ws.finnhub.io?token=" + API_KEY;
@@ -29,19 +25,50 @@ public class FinnhubTradeDataAccessObject implements TradeDataAccessInterface {
     private OkHttpClient client;
     private TradeListener listener;
     private String currentSymbol;
+    private boolean hasReceivedPing = false;
 
     @Override
     public void connect(String symbol, TradeListener listener) {
         this.listener = listener;
-        this.currentSymbol = symbol;
+
+        if (symbol != null) {
+            symbol = symbol.trim().toUpperCase();
+        }
 
         if (webSocket != null) {
-            LOGGER.info("Closing existing Finnhub connection...");
+            if (currentSymbol != null && !currentSymbol.isEmpty()) {
+                try {
+                    String unsubscribeMsg = String.format("{\"type\":\"unsubscribe\",\"symbol\":\"%s\"}", currentSymbol);
+                    webSocket.send(unsubscribeMsg);
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                } catch (Exception e) {
+                    // Error unsubscribing
+                }
+            }
             webSocket.close(1000, "Reconnecting");
+            webSocket = null;
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
+
+        if (symbol != null) {
+            this.currentSymbol = symbol.trim();
+        } else {
+            this.currentSymbol = null;
+        }
+        this.hasReceivedPing = false;
 
         client = new OkHttpClient.Builder()
                 .readTimeout(0, TimeUnit.MILLISECONDS)
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .pingInterval(25, TimeUnit.SECONDS) // Finnhub often sends pings - keep connection alive
                 .build();
 
         Request request = new Request.Builder().url(WEB_SOCKET_URL).build();
@@ -53,7 +80,6 @@ public class FinnhubTradeDataAccessObject implements TradeDataAccessInterface {
         webSocket = client.newWebSocket(request, new WebSocketListener() {
             @Override
             public void onOpen(WebSocket ws, Response response) {
-                LOGGER.info("WebSocket Opened. Subscribing to " + currentSymbol);
                 String subscribeMsg = String.format("{\"type\":\"subscribe\",\"symbol\":\"%s\"}", currentSymbol);
                 ws.send(subscribeMsg);
             }
@@ -62,42 +88,30 @@ public class FinnhubTradeDataAccessObject implements TradeDataAccessInterface {
             public void onMessage(WebSocket ws, String text) {
                 processMessage(text);
             }
-
-            @Override
-            public void onClosing(WebSocket ws, int code, String reason) {
-                LOGGER.info("WebSocket Closing: Code " + code + ", Reason: " + reason);
-                ws.close(1000, null);
-            }
-
-            @Override
-            public void onFailure(WebSocket ws, Throwable t, Response response) {
-                LOGGER.log(Level.SEVERE, "WebSocket Failure: " + t.getMessage(), t);
-                if (listener != null) {
-                    listener.onStatusChanged("Status: Failure! See console.", true);
-                }
-            }
-
-            @Override
-            public void onClosed(WebSocket ws, int code, String reason) {
-                LOGGER.info("WebSocket Closed.");
-                webSocket = null;
-                if (listener != null) {
-                    listener.onStatusChanged("Status: Disconnected", false);
-                }
-            }
         });
     }
 
     @Override
     public void disconnect() {
         if (webSocket != null) {
+            if (currentSymbol != null && !currentSymbol.isEmpty()) {
+                try {
+                    String unsubscribeMsg = String.format("{\"type\":\"unsubscribe\",\"symbol\":\"%s\"}", currentSymbol);
+                    webSocket.send(unsubscribeMsg);
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                } catch (Exception e) {
+                    // Error unsubscribing
+                }
+            }
             webSocket.close(1000, "User disconnect");
             webSocket = null;
         }
-        if (client != null) {
-            client.dispatcher().executorService().shutdown();
-            client = null;
-        }
+        client = null;
+        currentSymbol = null;
     }
 
     /**
@@ -141,44 +155,145 @@ public class FinnhubTradeDataAccessObject implements TradeDataAccessInterface {
     }
 
     /**
+     * Processes trade data that comes in array format from Finnhub.
+     * Format: {"type":"trade","data":[{"s":"SYMBOL","p":price,"v":volume,"t":timestamp},...]}
+     * Or: [{"s":"SYMBOL","p":price,"v":volume,"t":timestamp},...]
+     */
+    private void processTradeArray(String jsonMessage) {
+        try {
+            String dataArray = null;
+            if (jsonMessage.contains("\"data\":[")) {
+                int dataStart = jsonMessage.indexOf("\"data\":[") + 8;
+                int bracketCount = 1;
+                int dataEnd = dataStart;
+                while (dataEnd < jsonMessage.length() && bracketCount > 0) {
+                    if (jsonMessage.charAt(dataEnd) == '[') bracketCount++;
+                    if (jsonMessage.charAt(dataEnd) == ']') bracketCount--;
+                    dataEnd++;
+                }
+                if (bracketCount == 0) {
+                    dataArray = jsonMessage.substring(dataStart, dataEnd - 1);
+                }
+            } else if (jsonMessage.trim().startsWith("[")) {
+                dataArray = jsonMessage.trim().substring(1, jsonMessage.trim().length() - 1);
+            }
+
+            if (dataArray == null || dataArray.isEmpty()) {
+                return;
+            }
+            String[] tradeObjects = dataArray.split("\\},\\{");
+            for (int i = 0; i < tradeObjects.length; i++) {
+                String tradeObj = tradeObjects[i];
+                tradeObj = tradeObj.replaceFirst("^\\{?", "{").replaceFirst("\\}?$", "}");
+                if (!tradeObj.startsWith("{")) {
+                    tradeObj = "{" + tradeObj;
+                }
+                if (!tradeObj.endsWith("}")) {
+                    tradeObj = tradeObj + "}";
+                }
+
+                String symbol = extractValue(tradeObj, "s");
+                String normalizedReceivedSymbol = (symbol != null) ? symbol.trim() : null;
+                String normalizedCurrentSymbol = (currentSymbol != null) ? currentSymbol.trim() : null;
+
+                if (normalizedCurrentSymbol != null && normalizedReceivedSymbol != null &&
+                    normalizedCurrentSymbol.equalsIgnoreCase(normalizedReceivedSymbol)) {
+
+                    String priceStr = extractValue(tradeObj, "p");
+                    double price = (priceStr != null) ? Double.parseDouble(priceStr) : 0.0;
+
+                    String volumeStr = extractValue(tradeObj, "v");
+                    double volume = (volumeStr != null) ? Double.parseDouble(volumeStr) : 0.0;
+
+                    String timestampStr = extractValue(tradeObj, "t");
+                    long timestamp = (timestampStr != null) ? Long.parseLong(timestampStr) : 0L;
+
+                    Instant ts = timestamp > 0 ? Instant.ofEpochMilli(timestamp) : null;
+
+                    if (listener != null) {
+                        listener.onStatusChanged("Status: Connected to " + currentSymbol, false);
+                        Trade trade = new Trade(symbol, price, volume, ts);
+                        listener.onTrade(trade);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Error processing trade array
+        }
+    }
+
+    /**
      * Parses the incoming JSON message using manual string manipulation and dispatches Trade domain objects.
+     * Based on working Finnhub WebSocket example.
      */
     private void processMessage(String jsonMessage) {
         try {
+            if (jsonMessage.contains("\"type\":\"ping\"")) {
+                hasReceivedPing = true;
+                return;
+            }
+
             if (jsonMessage.contains("\"type\":\"trade\"")) {
+                if (jsonMessage.contains("\"data\":[")) {
+                    processTradeArray(jsonMessage);
+                    return;
+                }
+
                 String symbol = extractValue(jsonMessage, "s");
 
                 String priceStr = extractValue(jsonMessage, "p");
-                double price = (priceStr != null) ? Double.parseDouble(priceStr) : 0.0;
+                double price;
+                if (priceStr != null) {
+                    price = Double.parseDouble(priceStr);
+                } else {
+                    price = 0.0;
+                }
 
                 String volumeStr = extractValue(jsonMessage, "v");
-                double volume = (volumeStr != null) ? Double.parseDouble(volumeStr) : 0.0;
+                double volume;
+                if (volumeStr != null) {
+                    volume = Double.parseDouble(volumeStr);
+                } else {
+                    volume = 0.0;
+                }
 
                 String timestampStr = extractValue(jsonMessage, "t");
-                long timestamp = (timestampStr != null) ? Long.parseLong(timestampStr) : 0L;
+                long timestamp;
+                if (timestampStr != null) {
+                    timestamp = Long.parseLong(timestampStr);
+                } else {
+                    timestamp = 0L;
+                }
 
-                Instant ts = timestamp > 0 ? Instant.ofEpochMilli(timestamp) : null;
+                Instant ts;
+                if (timestamp > 0) {
+                    ts = Instant.ofEpochMilli(timestamp);
+                } else {
+                    ts = null;
+                }
+
 
                 if (listener != null) {
-                    // First successful trade means we are effectively connected for this symbol.
                     listener.onStatusChanged("Status: Connected to " + currentSymbol, false);
-
                     Trade trade = new Trade(symbol, price, volume, ts);
                     listener.onTrade(trade);
                 }
-            } else if (jsonMessage.contains("\"type\":\"ping\"")) {
-                // No-op: connection keep-alive
-            } else if (jsonMessage.contains("\"type\":\"error\"")) {
-                // Handle error messages from the API
+            } 
+
+            else if (jsonMessage.contains("\"type\":\"error\"")) {
                 String errorMsg = extractValue(jsonMessage, "msg");
                 if (listener != null) {
                     String errorText = errorMsg != null ? errorMsg : "Unknown error";
                     listener.onStatusChanged("Status: Error - " + errorText, true);
                 }
+            } else {
+                // Check if it might be an array format we missed
+                if (jsonMessage.trim().startsWith("[") && jsonMessage.contains("\"s\"") && jsonMessage.contains("\"p\"")) {
+                    processTradeArray(jsonMessage);
+                }
             }
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Error processing JSON message with manual parsing: " + e.getMessage()
-                    + "\nMessage: " + jsonMessage);
+            // Error processing JSON message
         }
     }
 }

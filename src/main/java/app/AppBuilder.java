@@ -11,10 +11,7 @@ import use_case.earnings_history.EarningsDataAccessInterface;
 import use_case.earnings_history.GetEarningsHistoryInputBoundary;
 import use_case.earnings_history.GetEarningsHistoryInteractor;
 import use_case.earnings_history.GetEarningsHistoryOutputBoundary;
-import use_case.watchlist.WatchlistInputBoundary;
-import use_case.watchlist.WatchlistInteractor;
-import use_case.watchlist.WatchlistOutputBoundary;
-import use_case.watchlist.WatchlistUserDataAccessInterface;
+import use_case.watchlist.*;
 import view.EarningsHistoryView;
 
 import data_access.FileUserDataAccessObject;
@@ -204,18 +201,14 @@ public class AppBuilder {
     }
 
     public AppBuilder addTradeView() {
-        // ViewModel
         tradeViewModel = new TradeViewModel();
-        
-        // Presenter + Interactor
+
         TradeOutputBoundary tradeOutputBoundary = new TradePresenter(tradeViewModel);
         TradeDataAccessInterface tradeDataAccess = new FinnhubTradeDataAccessObject();
         TradeInputBoundary tradeInteractor = new TradeInteractor(tradeDataAccess, tradeOutputBoundary);
-        
-        // Controller
         TradeController tradeController = new TradeController(tradeInteractor);
         
-        // Swing view
+
         tradeView = new TradeView(tradeController, tradeViewModel);
         cardPanel.add(tradeView, tradeView.getViewName());
         return this;
@@ -308,7 +301,9 @@ public class AppBuilder {
                 new AccountPresenter(accountViewModel);
         WatchlistInputBoundary watchlistInteractor =
                 new WatchlistInteractor(watchlistDataAccessObject, watchlistPresenter);
-        AccountController accountController = new AccountController(watchlistInteractor);
+        RemoveWatchlistInputBoundary removeInteractor =
+                new RemoveWatchlistInteractor(watchlistDataAccessObject, watchlistPresenter);
+        AccountController accountController = new AccountController(watchlistInteractor, removeInteractor);
 
         accountView = new AccountView(accountViewModel);
         accountView.setController(accountController);
@@ -360,14 +355,9 @@ public class AppBuilder {
     }
 
     public AppBuilder addRealtimeTradeUseCase() {
-        // Logged-in page: Realtime Trade button → Trade view
         String tradeViewName = tradeView.getViewName();
-        System.out.println("Setting up Realtime Trade navigation to view: " + tradeViewName); // debug
         loggedInView.setRealtimeTradeNavigation(viewManagerModel, tradeViewName);
-
-        // Trade page: Back button → Logged-in view
         tradeView.setBackNavigation(viewManagerModel, loggedInView.getViewName());
-
         return this;
     }
 
