@@ -40,8 +40,7 @@ public class FilterSearchInteractor implements FilterSearchInputBoundary {
             // Debug output in console:
             e.printStackTrace();
 
-            filterSearchPresenter.prepareFailView("Unable to load filtered stocks."
-                    +  e.getMessage());
+            filterSearchPresenter.prepareFailView(e.getMessage());
         }
     }
 }
