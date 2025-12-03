@@ -101,14 +101,9 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
 
         final JButton realtimeTradeButton = new JButton("Realtime Trade");
         realtimeTradeButton.addActionListener(e -> {
-            System.out.println("Realtime Trade button clicked"); // debug
-            System.out.println("viewManagerModel: " + viewManagerModel); // debug
-            System.out.println("realtimeTradeViewName: " + realtimeTradeViewName); // debug
             if (viewManagerModel != null && realtimeTradeViewName != null) {
                 viewManagerModel.setState(realtimeTradeViewName);
                 viewManagerModel.firePropertyChange();
-            } else {
-                System.out.println("ERROR: Cannot navigate - viewManagerModel or realtimeTradeViewName is null"); // debug
             }
         });
 
