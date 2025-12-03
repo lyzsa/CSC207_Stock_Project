@@ -111,6 +111,7 @@ public class FilterSearchInteractorTest {
         interactor.execute(request);
 
         assertEquals("Unable to load filtered stocks.", recordingPresenter.error);
+
     }
 }
 
