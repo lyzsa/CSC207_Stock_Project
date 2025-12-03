@@ -350,6 +350,9 @@ public class AppBuilder {
         MarketStatusInputBoundary msInteractor = new MarketStatusInteractor(msDao, msPresenter);
         marketStatusController = new MarketStatusController(msInteractor);
         loggedInView.setMarketStatusViewModel(marketStatusViewModel);
+        if (tradeView != null) {
+            tradeView.setMarketStatusViewModel(marketStatusViewModel);
+        }
         marketStatusController.updateStatus();
         return this;
     }
