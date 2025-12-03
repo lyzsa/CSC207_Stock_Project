@@ -2,6 +2,7 @@ package view;
 
 import entity.Trade;
 import interface_adapter.ViewManagerModel;
+import interface_adapter.market_status.MarketStatusViewModel;
 import interface_adapter.trade.TradeController;
 import interface_adapter.trade.TradeState;
 import interface_adapter.trade.TradeViewModel;
@@ -26,6 +27,7 @@ public class TradeView extends JPanel implements PropertyChangeListener {
 
     private final TradeController tradeController;
     private final TradeViewModel tradeViewModel;
+    private MarketStatusViewModel marketStatusViewModel;
 
     // Trade data labels
     private final JLabel symbolLabel = new JLabel("---");
@@ -34,6 +36,7 @@ public class TradeView extends JPanel implements PropertyChangeListener {
     private final JLabel timestampLabel = new JLabel("---");
     private final JLabel statusLabel = new JLabel("Status: Disconnected", SwingConstants.CENTER);
     private final JTextField symbolInputField = new JTextField(20);
+    private JLabel symbolTypeLabel; // Label to show symbol type (Stock/Crypto)
     private JButton connectButton;
     private JButton disconnectButton;
     private String currentSymbol = "";
@@ -89,12 +92,37 @@ public class TradeView extends JPanel implements PropertyChangeListener {
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
         searchPanel.add(new JLabel("Symbol:"));
         symbolInputField.setText("BINANCE:BTCUSDT"); // Default value
-        symbolInputField.setToolTipText("Enter crypto pair (e.g., BINANCE:BTCUSDT). Stock symbols may not have real-time trade data.");
+        symbolInputField.setToolTipText("Enter crypto pair (e.g., BINANCE:BTCUSDT) or stock symbol (e.g., AAPL)");
+        
+        // Add listener to detect symbol type as user types
+        symbolInputField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            @Override
+            public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                updateSymbolTypeIndicator();
+            }
+            
+            @Override
+            public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                updateSymbolTypeIndicator();
+            }
+            
+            @Override
+            public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                updateSymbolTypeIndicator();
+            }
+        });
+        
         searchPanel.add(symbolInputField);
         
-        // Add a help label to guide users
-        JLabel helpLabel = new JLabel("<html><small style='color:gray;'>Note: Crypto pairs work best (e.g., BINANCE:BTCUSDT)</small></html>");
-        searchPanel.add(helpLabel);
+        // Symbol type indicator label
+        JLabel symbolTypeLabel = new JLabel("");
+        symbolTypeLabel.setFont(new Font("Arial", Font.ITALIC, 11));
+        symbolTypeLabel.setForeground(Color.GRAY);
+        searchPanel.add(symbolTypeLabel);
+        this.symbolTypeLabel = symbolTypeLabel; // Store reference for updates
+
+        // Initialize symbol type indicator
+        updateSymbolTypeIndicator();
         connectButton = new JButton("Connect");
         connectButton.addActionListener(e -> onConnectClicked());
         searchPanel.add(connectButton);
@@ -137,6 +165,73 @@ public class TradeView extends JPanel implements PropertyChangeListener {
         label.setFont(new Font("Monospaced", Font.BOLD, 18));
         label.setForeground(new Color(0, 128, 0)); // Green color for data
     }
+    
+    /**
+     * Determines if a symbol is a cryptocurrency pair or a stock symbol.
+     * @param symbol The symbol to check
+     * @return "Crypto" if it's a crypto pair, "Stock" if it's a stock, "Unknown" if unclear
+     */
+    private String detectSymbolType(String symbol) {
+        if (symbol == null || symbol.trim().isEmpty()) {
+            return "Unknown";
+        }
+        
+        String upperSymbol = symbol.trim().toUpperCase();
+        
+        // Check for crypto pair format: EXCHANGE:PAIR (e.g., BINANCE:BTCUSDT, COINBASE:BTCUSD)
+        if (upperSymbol.contains(":")) {
+            String[] parts = upperSymbol.split(":", 2);
+            if (parts.length == 2) {
+                String exchange = parts[0];
+                String pair = parts[1];
+                
+                // Common crypto exchanges
+                if (exchange.equals("BINANCE") || exchange.equals("COINBASE") || 
+                    exchange.equals("KRAKEN") || exchange.equals("BITSTAMP") ||
+                    exchange.equals("BITFINEX") || exchange.equals("GEMINI")) {
+                    // Check if pair looks like a crypto pair (usually ends with USD, USDT, EUR, etc.)
+                    if (pair.endsWith("USD") || pair.endsWith("USDT") || pair.endsWith("EUR") ||
+                        pair.endsWith("BTC") || pair.endsWith("ETH") || pair.length() >= 6) {
+                        return "Crypto";
+                    }
+                }
+            }
+        }
+        
+        // Stock symbols are typically 1-5 uppercase letters/numbers, no special characters
+        // Common patterns: AAPL, TSLA, GOOGL, BRK.B, 005930 (Korean stocks)
+        if (upperSymbol.matches("^[A-Z0-9]{1,5}$") || upperSymbol.matches("^[A-Z0-9]+\\.[A-Z]$")) {
+            return "Stock";
+        }
+        
+        return "Unknown";
+    }
+    
+    /**
+     * Updates the symbol type indicator label based on current input.
+     */
+    private void updateSymbolTypeIndicator() {
+        if (symbolTypeLabel == null) {
+            return;
+        }
+        
+        String symbol = symbolInputField.getText().trim();
+        String symbolType = detectSymbolType(symbol);
+        
+        switch (symbolType) {
+            case "Crypto":
+                symbolTypeLabel.setText("(Crypto)");
+                symbolTypeLabel.setForeground(new Color(0, 150, 0)); // Green
+                break;
+            case "Stock":
+                symbolTypeLabel.setText("(Stock)");
+                symbolTypeLabel.setForeground(new Color(200, 100, 0)); // Orange
+                break;
+            default:
+                symbolTypeLabel.setText("");
+                break;
+        }
+    }
 
     /**
      * Handles the Connect button click by delegating to the Controller.
@@ -149,8 +244,30 @@ public class TradeView extends JPanel implements PropertyChangeListener {
             return;
         }
         
-        // Warn user if they're using a stock symbol (not crypto)
-        if (!symbol.contains(":") || !symbol.toUpperCase().startsWith("BINANCE:")) {
+        // Detect symbol type
+        String symbolType = detectSymbolType(symbol);
+        
+        // If it's a stock symbol, check if market is closed
+        if (symbolType.equals("Stock")) {
+            if (marketStatusViewModel != null && !marketStatusViewModel.isOpen()) {
+                String marketStatusText = marketStatusViewModel.getStatusText();
+                if (marketStatusText == null) {
+                    marketStatusText = "Market is closed";
+                }
+                JOptionPane.showMessageDialog(
+                    this,
+                    "Cannot connect to stock symbol '" + symbol + "' because the market is closed.\n\n" +
+                    "Market Status: " + marketStatusText + "\n\n" +
+                    "Please try:\n" +
+                    "• Wait until the market opens\n" +
+                    "• Use a cryptocurrency pair instead (e.g., BINANCE:BTCUSDT)",
+                    "Market Closed",
+                    JOptionPane.WARNING_MESSAGE
+                );
+                return;
+            }
+            
+            // Warn user if they're using a stock symbol (not crypto)
             int result = JOptionPane.showConfirmDialog(
                 this,
                 "Stock symbols (like AAPL, TSLA) may not have real-time trade data available.\n\n" +
@@ -466,5 +583,12 @@ public class TradeView extends JPanel implements PropertyChangeListener {
     public void setBackNavigation(ViewManagerModel viewManagerModel, String homeViewName) {
         this.viewManagerModel = viewManagerModel;
         this.homeViewName = homeViewName;
+    }
+    
+    /**
+     * Sets the market status view model to check if market is open/closed.
+     */
+    public void setMarketStatusViewModel(MarketStatusViewModel marketStatusViewModel) {
+        this.marketStatusViewModel = marketStatusViewModel;
     }
 }
