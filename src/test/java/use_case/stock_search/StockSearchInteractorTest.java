@@ -72,13 +72,10 @@ class StockSearchInteractorTest {
 
         StockSearchRequestModel request = new StockSearchRequestModel("aapl");
 
-        // Act
         interactor.execute(request);
 
-        // Assert DAO was called with trimmed/uppercased symbol
         assertEquals("AAPL", dao.lastSymbol);
 
-        // Assert presenter received success
         assertNotNull(presenter.lastSuccess);
         assertNull(presenter.lastError);
 
