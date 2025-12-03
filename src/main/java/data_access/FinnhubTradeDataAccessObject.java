@@ -316,7 +316,6 @@ public class FinnhubTradeDataAccessObject implements TradeDataAccessInterface {
                     listener.onStatusChanged("Status: Error - " + errorText, true);
                 }
             } else {
-                // Check if it might be an array format we missed
                 if (jsonMessage.trim().startsWith("[")
                         && jsonMessage.contains("\"s\"")
                         && jsonMessage.contains("\"p\"")) {
