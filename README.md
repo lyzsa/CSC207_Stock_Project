@@ -292,7 +292,3 @@ This is a course project following Clean Architecture principles. When contribut
 - Include unit tests for new features
 - Respect interface boundaries and dependency inversion
 
-## License
-
-[Add your license information here if applicable]
-
